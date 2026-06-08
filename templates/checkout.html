@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar compra | Outlet Momatt México</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+    <link rel="stylesheet" href="/static/estilos.css">
+    <meta name="x-whatsapp" content="{{ sitio.whatsapp }}">
+    <script src="/static/chatbot.js" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <a href="/" class="logo"><img src="/static/img/logo-texto.png" alt="Outlet Momatt México"></a>
+        <a href="/carrito" class="cart-link">🛒 Carrito</a>
+    </header>
+
+    <main class="checkout-page">
+        <h1>Finalizar compra</h1>
+        <div class="checkout-grid">
+
+            <!-- Resumen del pedido -->
+            <div class="resumen-box">
+                <h2>Tu pedido</h2>
+                {% for item in items %}
+                <div class="resumen-linea">
+                    <span>{{ item.cantidad }} × {{ item.producto.nombre }}</span>
+                    <strong>${{ "{:,.0f}".format(item.subtotal) }}</strong>
+                </div>
+                {% endfor %}
+                <div class="resumen-linea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--gris-claro);">
+                    <span>Subtotal</span><strong>${{ "{:,.0f}".format(subtotal) }} MXN</strong>
+                </div>
+                <div class="resumen-linea">
+                    <span>IVA (16%)</span><strong>${{ "{:,.0f}".format(iva) }} MXN</strong>
+                </div>
+                <div class="resumen-total">
+                    <span>Total a pagar</span>
+                    <strong>${{ "{:,.0f}".format(total) }} MXN</strong>
+                </div>
+            </div>
+
+            <!-- Datos del cliente + método de pago -->
+            <div class="form-box">
+                <h2>Tus datos</h2>
+                <form action="/pagar" method="post">
+                    <label>Nombre completo
+                        <input type="text" name="nombre" required>
+                    </label>
+                    <label>Correo electrónico
+                        <input type="email" name="correo" required>
+                    </label>
+                    <label>Teléfono (opcional)
+                        <input type="tel" name="telefono">
+                    </label>
+
+                    <h3>Método de pago</h3>
+                    <label class="metodo">
+                        <input type="radio" name="metodo" value="spei" required>
+                        <span>
+                            <strong>Transferencia SPEI (automático)</strong>
+                            <small>Te damos una CLABE y referencia. Funciona con cualquier banco.</small>
+                        </span>
+                    </label>
+                    <label class="metodo">
+                        <input type="radio" name="metodo" value="banregio">
+                        <span>
+                            <strong>Transferencia directa a Banregio</strong>
+                            <small>Sin comisión. Confirmas enviando tu comprobante.</small>
+                        </span>
+                    </label>
+
+                    <button type="submit" class="btn-pagar">Confirmar pedido</button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="footer"><p class="footer-bottom">© Outlet Momatt México · Pago seguro por transferencia</p></footer>
+
+    <a href="https://wa.me/{{ sitio.whatsapp }}?text=Hola,%20tengo%20una%20duda%20sobre%20mi%20pedido."
+       class="whatsapp-float" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
+        <span>💬</span>
+        <strong>¿Dudas? Asesor</strong>
+    </a>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu carrito | Outlet Momatt México</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+    <link rel="stylesheet" href="/static/estilos.css">
+    <meta name="x-whatsapp" content="{{ sitio.whatsapp }}">
+    <script src="/static/chatbot.js" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <a href="/" class="logo"><img src="/static/img/logo-texto.png" alt="Outlet Momatt México"></a>
+        <a href="/carrito" class="cart-link">🛒 Carrito</a>
+    </header>
+
+    <main class="carrito-page">
+        <h1>Tu carrito</h1>
+
+        {% if items %}
+        <table class="carrito-tabla">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <strong>{{ item.producto.nombre }}</strong>
+                        <div class="mini">{{ item.producto.marca }} · {{ item.producto.capacidad }}</div>
+                    </td>
+                    <td>${{ "{:,.0f}".format(item.producto.precio) }}</td>
+                    <td>{{ item.cantidad }}</td>
+                    <td>${{ "{:,.0f}".format(item.subtotal) }} MXN</td>
+                    <td>
+                        <form action="/eliminar" method="post">
+                            <input type="hidden" name="producto_id" value="{{ item.producto.id }}">
+                            <button type="submit" class="btn-eliminar" title="Quitar">✕</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="resumen">
+            <div class="resumen-desglose">
+                <div class="resumen-linea"><span>Subtotal</span><strong>${{ "{:,.0f}".format(subtotal) }} MXN</strong></div>
+                <div class="resumen-linea"><span>IVA (16%)</span><strong>${{ "{:,.0f}".format(iva) }} MXN</strong></div>
+                <div class="resumen-linea resumen-total-linea"><span>Total</span><strong>${{ "{:,.0f}".format(total) }} MXN</strong></div>
+            </div>
+            <a href="/checkout" class="btn-pagar">Continuar al pago</a>
+        </div>
+        {% else %}
+        <p class="vacio">Tu carrito está vacío. <a href="/">Ver productos</a></p>
+        {% endif %}
+    </main>
+
+    <footer class="footer"><p class="footer-bottom">© Outlet Momatt México · Patines hidráulicos industriales</p></footer>
+
+    <a href="https://wa.me/{{ sitio.whatsapp }}?text=Hola,%20tengo%20una%20duda%20sobre%20mi%20carrito."
+       class="whatsapp-float" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
+        <span>💬</span>
+        <strong>¿Dudas? Asesor</strong>
+    </a>
+</body>
+</html>

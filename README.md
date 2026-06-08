@@ -1,0 +1,83 @@
+# Tienda de Patines Hidráulicos Industriales
+
+E-commerce con FastAPI. Dos métodos de pago pensados para México:
+- **Transferencia SPEI vía Openpay** — automático, funciona con cualquier banco.
+- **Transferencia directa a Banregio** — sin comisión, confirmación manual.
+
+## Estructura
+
+- `catalogo.py` — Tus productos. **Único archivo que editas** para precios/stock.
+- `config_pagos.py` — **Tus datos de Banregio y llaves de Openpay.** Edítalo.
+- `app.py` — Backend FastAPI: catálogo, carrito, checkout y procesamiento de pago.
+- `templates/` — Páginas HTML (catálogo, carrito, checkout, pago SPEI, pago Banregio).
+- `static/estilos.css` — Diseño (tema industrial).
+
+## Instalar y correr
+
+```bash
+pip install -r requirements.txt
+uvicorn app:app --reload
+```
+
+Abre http://localhost:8000
+
+## Configurar pagos (config_pagos.py)
+
+### Banregio (transferencia directa)
+Edita el diccionario `BANREGIO` con tu titular, CLABE real y datos de contacto.
+No requiere llaves ni API: solo son los datos que ve el cliente para pagarte.
+
+### Openpay (SPEI automático)
+1. En tu dashboard de Openpay copia: Merchant ID y Llave privada (sk_...).
+2. Córrelo pasando las llaves como variables de entorno (recomendado):
+
+```bash
+OPENPAY_MERCHANT_ID=tu_merchant_id \
+OPENPAY_PRIVATE_KEY=sk_tu_llave \
+uvicorn app:app --reload
+```
+
+Por defecto usa el ambiente SANDBOX (pruebas). Para cobrar de verdad:
+
+```bash
+OPENPAY_PRODUCCION=True OPENPAY_MERCHANT_ID=... OPENPAY_PRIVATE_KEY=... uvicorn app:app --reload
+```
+
+## Nota técnica
+El SDK oficial `openpay` de Python está abandonado (no instala en Python 3.12
+por usar `use_2to3`). Por eso este proyecto llama la API REST de Openpay
+directamente con `requests`, que es más estable y sin dependencias muertas.
+
+## Pendiente para producción
+- Webhook de Openpay (`/webhook`) para confirmar automáticamente cuando el
+  cliente paga el SPEI. Sin esto, revisas los pagos en el dashboard de Openpay.
+- Guardar pedidos en base de datos (ahora el número de pedido es aleatorio).
+- Cambiar `secret_key` en app.py por un valor secreto real.
+
+---
+
+## SEO (optimización para Google)
+
+La tienda incluye SEO técnico enfocado en ventas:
+
+- **Páginas individuales por producto** (`/producto/{id}`) con título y descripción
+  optimizados según búsquedas reales del mercado mexicano (patín hidráulico,
+  traspaleta, pallet jack, paletera, etc).
+- **Datos estructurados Schema.org** (JSON-LD) de tienda y producto: hacen que
+  Google muestre tu precio y disponibilidad directo en los resultados.
+- **sitemap.xml** y **robots.txt** automáticos para que Google indexe todo.
+- **Open Graph**: cómo se ve tu tienda al compartirla por WhatsApp/Facebook.
+- Migas de pan, H1 con keywords, productos relacionados (enlaces internos),
+  y señales de confianza (envío, pago seguro) que suben la conversión.
+
+### Para activar el SEO en producción
+1. Edita `seo.py` -> `SITIO["dominio"]` con tu dominio real (ej. https://www.outletmomatt.com).
+2. Edita teléfono, correo, ciudad en el mismo diccionario `SITIO`.
+3. Cuando publiques, registra tu sitio en Google Search Console y sube el sitemap:
+   https://www.outletmomatt.com/sitemap.xml
+
+## Logo
+Tu logo está en `static/img/`:
+- `logo-momatt.png` — original completo (para compartir / Open Graph).
+- `logo-texto.png` — versión horizontal para el header.
+- `favicon.png` — ícono de la pestaña del navegador.
