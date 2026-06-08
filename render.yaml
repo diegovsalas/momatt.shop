@@ -1,0 +1,50 @@
+# render.yaml — Blueprint de Render para Outlet Momatt México
+# -------------------------------------------------------------------
+# Cómo se usa:
+#   1. En render.com → New + → Blueprint
+#   2. Conecta este repo (diegovsalas/momatt.shop)
+#   3. Render lee este archivo y crea el servicio
+#   4. Llena los valores marcados como sync:false en el dashboard
+#      (CLABE, llaves Openpay, etc.) — son secretos, no van al repo
+# -------------------------------------------------------------------
+
+services:
+  - type: web
+    name: momatt-shop
+    runtime: python
+    plan: free                   # 750 hrs/mes; spin-down tras 15 min idle
+    region: oregon               # us-west (más cerca de MX que Frankfurt)
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    autoDeploy: true             # cada push a main re-deploya
+
+    envVars:
+      # Versión de Python (estable y compatible con FastAPI)
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+
+      # Llave de sesión: Render genera una aleatoria al crear el servicio
+      - key: SESSION_SECRET_KEY
+        generateValue: true
+
+      # --- Banregio (configura en el dashboard de Render) ---
+      - key: BANREGIO_TITULAR
+        sync: false
+      - key: BANREGIO_CLABE
+        sync: false
+      - key: BANREGIO_CUENTA
+        sync: false
+      - key: BANREGIO_WHATSAPP
+        sync: false
+      - key: BANREGIO_CORREO
+        sync: false
+
+      # --- Openpay (configura en el dashboard de Render) ---
+      - key: OPENPAY_MERCHANT_ID
+        sync: false
+      - key: OPENPAY_PRIVATE_KEY
+        sync: false
+      - key: OPENPAY_PRODUCCION
+        value: "False"           # cámbialo a True cuando estés listo para cobros reales
