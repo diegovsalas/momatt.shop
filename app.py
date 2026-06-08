@@ -9,6 +9,7 @@
 #       instrucciones para que transfiera y mande comprobante.
 # -------------------------------------------------------------------
 import os
+import secrets
 import requests
 from requests.auth import HTTPBasicAuth
 from fastapi import FastAPI, Request, Form
@@ -21,8 +22,17 @@ import catalogo
 import config_pagos as cfg
 import seo
 
+# Llave para firmar las cookies de sesión. En producción DEBE venir de
+# SESSION_SECRET_KEY (env var). Si falta, generamos una aleatoria en
+# memoria: las sesiones existentes se invalidan al reiniciar el proceso.
+SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY")
+if not SESSION_SECRET_KEY:
+    SESSION_SECRET_KEY = secrets.token_urlsafe(32)
+    print("⚠  SESSION_SECRET_KEY no está configurada. Usando una llave aleatoria en memoria — "
+          "las sesiones se invalidan al reiniciar. Configúrala como env var en producción.")
+
 app = FastAPI(title="Tienda de Patines Hidraulicos")
-app.add_middleware(SessionMiddleware, secret_key="cambia-esto-por-algo-secreto")
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 

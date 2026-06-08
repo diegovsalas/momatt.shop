@@ -1,34 +1,29 @@
 # config_pagos.py
 # -------------------------------------------------------------------
-# AQUÍ VAN TUS DATOS DE PAGO. Edita los dos bloques de abajo.
+# CONFIGURACIÓN DE PAGOS — todo se lee de variables de entorno.
+# Los valores tras la coma son SOLO placeholders para desarrollo local.
+# En producción configura las env vars (ver .env.example).
 #
 # 1) BANREGIO  -> transferencia directa a tu cuenta (sin comisión).
-#                 Solo son los datos que el cliente ve para pagarte.
-# 2) OPENPAY   -> SPEI automático. Necesita llaves de tu dashboard.
-#
-# Por seguridad, las llaves de Openpay se leen de variables de entorno
-# si existen; si no, usa los valores que pongas aquí.
+# 2) OPENPAY   -> SPEI automático. Llaves desde el dashboard de Openpay.
 # -------------------------------------------------------------------
 import os
 
 
 # --- 1) Banregio (transferencia directa) ---
-# Cambia estos datos por los TUYOS reales. No requiere API ni llaves.
 BANREGIO = {
-    "titular": "Outlet Momatt México",          # <-- nombre del titular de la cuenta
-    "banco": "Banregio",
-    "clabe": "058000000000000000",              # <-- TU CLABE real (18 dígitos)
-    "cuenta": "0000000000",                     # <-- número de cuenta (opcional)
-    "whatsapp": "+52 81 0000 0000",             # <-- a dónde mandan el comprobante
-    "correo": "ventas@outletmomatt.com",        # <-- correo para el comprobante
+    "titular":  os.getenv("BANREGIO_TITULAR",  "Outlet Momatt México"),
+    "banco":    "Banregio",
+    "clabe":    os.getenv("BANREGIO_CLABE",    "058000000000000000"),  # 18 dígitos
+    "cuenta":   os.getenv("BANREGIO_CUENTA",   "0000000000"),
+    "whatsapp": os.getenv("BANREGIO_WHATSAPP", "+52 81 3568 7469"),
+    "correo":   os.getenv("BANREGIO_CORREO",   "ventas@outletmomatt.com"),
 }
 
 
 # --- 2) Openpay (SPEI automático) ---
-# Pon tus llaves aquí O pásalas como variables de entorno (recomendado):
-#   OPENPAY_MERCHANT_ID, OPENPAY_PRIVATE_KEY, OPENPAY_PRODUCCION
-OPENPAY_MERCHANT_ID = os.getenv("OPENPAY_MERCHANT_ID", "")   # <-- Merchant ID
-OPENPAY_PRIVATE_KEY = os.getenv("OPENPAY_PRIVATE_KEY", "")   # <-- Llave privada (sk_...)
+OPENPAY_MERCHANT_ID = os.getenv("OPENPAY_MERCHANT_ID", "")
+OPENPAY_PRIVATE_KEY = os.getenv("OPENPAY_PRIVATE_KEY", "")
 
 # False = ambiente de PRUEBAS (sandbox). True = cobros REALES.
 OPENPAY_PRODUCCION = os.getenv("OPENPAY_PRODUCCION", "False").lower() == "true"
