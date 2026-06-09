@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido {{ pedido.id }} | Outlet Momatt México</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+    <link rel="stylesheet" href="/static/estilos.css">
+    <meta name="x-whatsapp" content="{{ sitio.whatsapp }}">
+    <script src="/static/chatbot.js" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <a href="/" class="logo"><img src="/static/img/logo-texto.png" alt="Outlet Momatt México"></a>
+        <nav class="topbar-nav">
+            {% if usuario %}
+            <a href="/perfil" class="topbar-link">👤 {{ usuario.nombre.split()[0] }}</a>
+            {% endif %}
+            <a href="/carrito" class="cart-link">🛒 Carrito</a>
+        </nav>
+    </header>
+
+    <main class="pago-page">
+        <h1>Pedido {{ pedido.id }}</h1>
+        <p>Hecho el {{ pedido.created_at.strftime("%d %b %Y · %H:%M") }}
+           · <span class="estado estado-{{ pedido.estado }}">{{ pedido.estado.replace('_',' ') }}</span></p>
+
+        <div class="datos-pago">
+            <div class="dato"><span>Cliente</span><strong>{{ pedido.nombre }}</strong></div>
+            <div class="dato"><span>Correo</span><strong>{{ pedido.email }}</strong></div>
+            {% if pedido.telefono %}<div class="dato"><span>Teléfono</span><strong>{{ pedido.telefono }}</strong></div>{% endif %}
+            <div class="dato"><span>Envío</span><strong>Ocurre vía {{ pedido.paqueteria }}</strong></div>
+        </div>
+
+        <div class="datos-pago">
+            <h3 style="padding:8px 0;color:var(--amarillo);">Productos</h3>
+            {% for it in pedido.items %}
+            <div class="dato">
+                <span>{{ it.cantidad }} × {{ it.nombre }}</span>
+                <strong>${{ "{:,.0f}".format(it.subtotal) }}</strong>
+            </div>
+            {% endfor %}
+            <div class="dato"><span>Subtotal productos</span><strong>${{ "{:,.0f}".format(pedido.subtotal_prod) }}</strong></div>
+            <div class="dato"><span>Envío</span><strong>${{ "{:,.0f}".format(pedido.envio) }}</strong></div>
+            <div class="dato"><span>IVA (16%)</span><strong>${{ "{:,.0f}".format(pedido.iva) }}</strong></div>
+            <div class="dato total-pago"><span>Total</span><strong>${{ "{:,.0f}".format(pedido.total) }} MXN</strong></div>
+        </div>
+
+        {% if pedido.estado == 'pendiente_pago' %}
+        <div class="datos-pago">
+            <h3 style="padding:8px 0;color:var(--amarillo);">Datos de pago (Banregio)</h3>
+            <div class="dato"><span>Titular</span><strong>{{ banregio.titular }}</strong></div>
+            <div class="dato"><span>CLABE</span><strong class="copiable">{{ banregio.clabe }}</strong></div>
+            <div class="dato"><span>Referencia</span><strong>{{ pedido.id }}</strong></div>
+        </div>
+        <a href="https://wa.me/{{ sitio.whatsapp }}?text=Hola,%20realic%C3%A9%20mi%20pago%20del%20pedido%20{{ pedido.id }}%20por%20${{ '{:,.0f}'.format(pedido.total) }}%20MXN.%20Adjunto%20comprobante."
+           class="btn-pagar btn-pagar-wa" target="_blank" rel="noopener">
+            💬 Mandar comprobante por WhatsApp
+        </a>
+        {% endif %}
+        <a href="{% if usuario %}/perfil{% else %}/{% endif %}" class="btn-volver">← Volver</a>
+    </main>
+
+    <footer class="footer"><p class="footer-bottom">© Outlet Momatt México</p></footer>
+</body>
+</html>

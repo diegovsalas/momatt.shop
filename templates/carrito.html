@@ -13,7 +13,14 @@
 <body>
     <header class="topbar">
         <a href="/" class="logo"><img src="/static/img/logo-texto.png" alt="Outlet Momatt México"></a>
-        <a href="/carrito" class="cart-link">🛒 Carrito</a>
+        <nav class="topbar-nav">
+            {% if usuario %}
+            <a href="/perfil" class="topbar-link">👤 {{ usuario.nombre.split()[0] }}</a>
+            {% else %}
+            <a href="/login" class="topbar-link">Iniciar sesión</a>
+            {% endif %}
+            <a href="/carrito" class="cart-link active">🛒 Carrito</a>
+        </nav>
     </header>
 
     <main class="carrito-page">

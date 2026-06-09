@@ -18,8 +18,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
+import auth
 import catalogo
 import config_pagos as cfg
+import correo
+import db
 import seo
 
 # Llave para firmar las cookies de sesión. En producción DEBE venir de
@@ -35,6 +38,11 @@ app = FastAPI(title="Tienda de Patines Hidraulicos")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+
+@app.on_event("startup")
+def _startup():
+    db.init()
 
 # --- Configurar Openpay (API REST) desde config_pagos.py ---
 # El SDK oficial de Python está abandonado (no instala en Python 3.12),
@@ -99,6 +107,7 @@ def home(request: Request):
         "meta": seo.meta_home(),
         "schema_org": seo.schema_organizacion(),
         "sitio": seo.SITIO,
+        "usuario": auth.current_user(request),
     })
 
 
@@ -127,6 +136,7 @@ def pagina_producto(request: Request, producto_id: str):
         ]),
         "sitio": seo.SITIO,
         "keywords_cat": seo.KEYWORDS_LONG_TAIL.get(p["categoria"], []),
+        "usuario": auth.current_user(request),
     })
 
 @app.post("/agregar")
@@ -153,7 +163,8 @@ def ver_carrito(request: Request):
     items, subtotal_prod, unidades, envio, iva, total = carrito_detallado(obtener_carrito(request))
     return templates.TemplateResponse(request, "carrito.html", {
         "items": items, "subtotal_prod": subtotal_prod, "unidades": unidades,
-        "envio": envio, "iva": iva, "total": total, "sitio": seo.SITIO})
+        "envio": envio, "iva": iva, "total": total, "sitio": seo.SITIO,
+        "total_items": unidades, "usuario": auth.current_user(request)})
 
 @app.post("/eliminar")
 def eliminar(request: Request, producto_id: str = Form(...)):
@@ -175,14 +186,15 @@ def checkout_form(request: Request):
     return templates.TemplateResponse(request, "checkout.html", {
         "items": items, "subtotal_prod": subtotal_prod, "unidades": unidades,
         "envio": envio, "iva": iva, "total": total,
-        "paqueterias": PAQUETERIAS, "sitio": seo.SITIO})
+        "paqueterias": PAQUETERIAS, "sitio": seo.SITIO,
+        "total_items": unidades, "usuario": auth.current_user(request)})
 
 
 @app.post("/pagar", response_class=HTMLResponse)
 def procesar_pago(
     request: Request,
     nombre: str = Form(...),
-    correo: str = Form(...),
+    email_cliente: str = Form(..., alias="correo"),
     telefono: str = Form(""),
     metodo: str = Form(...),       # "spei" o "banregio"
     paqueteria: str = Form("Castores"),
@@ -197,6 +209,38 @@ def procesar_pago(
 
     if metodo == "banregio":
         # --- Transferencia directa: solo mostramos TUS datos. Sin API. ---
+        # Persistir el pedido en BD si está disponible.
+        usuario = auth.current_user(request)
+        items_snapshot = [
+            {"id": it["producto"]["id"], "nombre": it["producto"]["nombre"],
+             "precio": it["producto"]["precio"], "cantidad": it["cantidad"],
+             "subtotal": it["subtotal"]} for it in items
+        ]
+        if db.disponible():
+            db.crear_pedido(
+                pedido_id=pedido,
+                user_id=(usuario["id"] if usuario else None),
+                email=email_cliente, nombre=nombre, telefono=telefono,
+                items=items_snapshot,
+                subtotal_prod=subtotal_prod, envio=envio, iva=iva, total=total,
+                unidades=unidades, paqueteria=paqueteria, metodo="banregio",
+            )
+        # Correo de confirmación (best-effort: no rompe el flujo si falla)
+        correo.enviar_confirmacion_pedido(
+            pedido={
+                "id": pedido, "nombre": nombre, "email": email_cliente,
+                "items": items_snapshot,
+                "subtotal_prod": subtotal_prod, "envio": envio, "iva": iva,
+                "total": total, "paqueteria": paqueteria,
+            },
+            banregio=cfg.BANREGIO,
+            dominio=seo.SITIO["dominio"],
+        )
+        # Recordar este pedido en la sesión para que el guest pueda verlo
+        recientes = request.session.get("recent_pedidos", [])
+        recientes.insert(0, pedido)
+        request.session["recent_pedidos"] = recientes[:10]
+
         guardar_carrito(request, {})
         return templates.TemplateResponse(request, "pago_banregio.html", {
             "banregio": cfg.BANREGIO,
@@ -226,7 +270,7 @@ def procesar_pago(
                 "order_id": pedido,
                 "customer": {
                     "name": nombre,
-                    "email": correo,
+                    "email": email_cliente,
                     "phone_number": telefono or "0000000000",
                 },
             }
@@ -259,6 +303,111 @@ def procesar_pago(
 
     else:
         return RedirectResponse(url="/checkout", status_code=303)
+
+
+# --- Auth: registro, login, logout, perfil ---
+
+def _bd_o_error(request):
+    """Si la BD no está configurada, devuelve una respuesta de error amigable."""
+    if not db.disponible():
+        return templates.TemplateResponse(request, "error_pago.html", {
+            "mensaje": "Las cuentas de usuario están temporalmente deshabilitadas "
+                       "(falta configurar la base de datos). Puedes seguir comprando "
+                       "como invitado.",
+        })
+    return None
+
+
+@app.get("/registro", response_class=HTMLResponse)
+def registro_form(request: Request):
+    err = _bd_o_error(request)
+    if err: return err
+    if auth.current_user(request):
+        return RedirectResponse(url="/perfil", status_code=303)
+    return templates.TemplateResponse(request, "registro.html", {
+        "sitio": seo.SITIO, "error": None, "valores": {}})
+
+
+@app.post("/registro", response_class=HTMLResponse)
+def registro_submit(request: Request,
+                    email: str = Form(...), password: str = Form(...),
+                    nombre: str = Form(...), telefono: str = Form("")):
+    err = _bd_o_error(request)
+    if err: return err
+    valores = {"email": email, "nombre": nombre, "telefono": telefono}
+    if len(password) < 8:
+        return templates.TemplateResponse(request, "registro.html", {
+            "sitio": seo.SITIO, "valores": valores,
+            "error": "La contraseña debe tener al menos 8 caracteres."})
+    if db.buscar_usuario_por_email(email):
+        return templates.TemplateResponse(request, "registro.html", {
+            "sitio": seo.SITIO, "valores": valores,
+            "error": "Ya existe una cuenta con ese correo. Inicia sesión."})
+    usuario = db.crear_usuario(email, auth.hash_password(password), nombre, telefono)
+    # Asocia pedidos previos hechos como invitado con este correo
+    db.adoptar_pedidos_huerfanos(usuario["id"], email)
+    auth.login_session(request, usuario)
+    return RedirectResponse(url="/perfil", status_code=303)
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_form(request: Request):
+    err = _bd_o_error(request)
+    if err: return err
+    if auth.current_user(request):
+        return RedirectResponse(url="/perfil", status_code=303)
+    return templates.TemplateResponse(request, "login.html", {
+        "sitio": seo.SITIO, "error": None, "email": ""})
+
+
+@app.post("/login", response_class=HTMLResponse)
+def login_submit(request: Request, email: str = Form(...), password: str = Form(...)):
+    err = _bd_o_error(request)
+    if err: return err
+    usuario = db.buscar_usuario_por_email(email)
+    if not usuario or not auth.verify_password(password, usuario["password_hash"]):
+        return templates.TemplateResponse(request, "login.html", {
+            "sitio": seo.SITIO, "email": email,
+            "error": "Correo o contraseña incorrectos."})
+    auth.login_session(request, usuario)
+    return RedirectResponse(url="/perfil", status_code=303)
+
+
+@app.post("/logout")
+def logout(request: Request):
+    auth.logout_session(request)
+    return RedirectResponse(url="/", status_code=303)
+
+
+@app.get("/perfil", response_class=HTMLResponse)
+def perfil(request: Request):
+    err = _bd_o_error(request)
+    if err: return err
+    usuario = auth.current_user(request)
+    if not usuario:
+        return RedirectResponse(url="/login", status_code=303)
+    pedidos = db.listar_pedidos_de_usuario(usuario["id"])
+    return templates.TemplateResponse(request, "perfil.html", {
+        "sitio": seo.SITIO, "usuario": usuario, "pedidos": pedidos})
+
+
+@app.get("/pedido/{pedido_id}", response_class=HTMLResponse)
+def ver_pedido(request: Request, pedido_id: str):
+    err = _bd_o_error(request)
+    if err: return err
+    pedido = db.buscar_pedido(pedido_id)
+    if not pedido:
+        return RedirectResponse(url="/", status_code=303)
+    # Autorización: dueño logueado O guest que lo hizo en esta sesión
+    usuario = auth.current_user(request)
+    recientes = request.session.get("recent_pedidos", [])
+    autorizado = (usuario and pedido.get("user_id") == usuario["id"]) or (pedido_id in recientes)
+    if not autorizado:
+        return templates.TemplateResponse(request, "error_pago.html", {
+            "mensaje": "Este pedido pertenece a otra cuenta. Inicia sesión para verlo."})
+    return templates.TemplateResponse(request, "pedido_detalle.html", {
+        "sitio": seo.SITIO, "pedido": pedido, "banregio": cfg.BANREGIO,
+        "usuario": usuario})
 
 
 # --- SEO técnico: sitemap y robots ---

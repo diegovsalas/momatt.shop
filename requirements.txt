@@ -4,3 +4,8 @@ jinja2
 requests
 itsdangerous
 python-multipart
+
+# Postgres (con connection pool) + hashing de passwords + Resend
+psycopg[binary,pool]
+passlib[bcrypt]
+resend

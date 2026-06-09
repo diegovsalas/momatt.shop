@@ -8,6 +8,13 @@
 #      (CLABE, llaves Openpay, etc.) — son secretos, no van al repo
 # -------------------------------------------------------------------
 
+databases:
+  - name: momatt-db
+    plan: free                   # 90 días gratis; después Starter ($7/mes)
+    region: oregon
+    databaseName: momatt
+    user: momatt
+
 services:
   - type: web
     name: momatt-shop
@@ -24,6 +31,12 @@ services:
       # Versión de Python (estable y compatible con FastAPI)
       - key: PYTHON_VERSION
         value: "3.12.7"
+
+      # Conexión a Postgres (Render la inyecta automáticamente)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: momatt-db
+          property: connectionString
 
       # Llave de sesión: Render genera una aleatoria al crear el servicio
       - key: SESSION_SECRET_KEY
@@ -48,3 +61,10 @@ services:
         sync: false
       - key: OPENPAY_PRODUCCION
         value: "False"           # cámbialo a True cuando estés listo para cobros reales
+
+      # Resend (correos transaccionales). Crea cuenta en resend.com,
+      # genera la API key y ponla aquí desde el dashboard de Render.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        value: "Outlet Momatt <pedidos@outletmomatt.com>"

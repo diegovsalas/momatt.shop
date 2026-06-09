@@ -40,6 +40,23 @@ body {
 }
 .logo:hover { transform: translateY(-1px); }
 .logo img { height: 40px; width: auto; display: block; }
+.topbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.topbar-link {
+    color: var(--texto);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.92rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+}
+.topbar-link:hover { color: var(--amarillo); }
+.topbar-link.active { color: var(--amarillo); }
+
 .cart-link {
     color: var(--texto);
     text-decoration: none;
@@ -154,6 +171,74 @@ body {
     padding: 16px;
     font-style: italic;
 }
+
+/* --- Auth (login / registro) --- */
+.auth-page { max-width: 460px; margin: 60px auto; padding: 24px; }
+.auth-box {
+    background: var(--gris);
+    border: 1px solid var(--gris-claro);
+    border-radius: 12px;
+    padding: 32px 28px;
+}
+.auth-box h1 { font-size: 1.5rem; margin-bottom: 6px; }
+.auth-sub { color: var(--texto-tenue); font-size: 0.9rem; margin-bottom: 22px; }
+.auth-box label { display: block; margin-bottom: 14px; font-size: 0.88rem; color: var(--texto-tenue); }
+.auth-box input {
+    width: 100%; margin-top: 6px; padding: 11px 12px; border-radius: 8px;
+    border: 1px solid var(--gris-claro); background: var(--negro); color: var(--texto); font-size: 1rem;
+}
+.auth-box input:focus { outline: none; border-color: var(--amarillo); }
+.auth-box .btn-pagar { width: 100%; margin-top: 6px; }
+.auth-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    font-size: 0.9rem;
+}
+.auth-foot { text-align: center; margin-top: 18px; color: var(--texto-tenue); font-size: 0.88rem; }
+.auth-foot a { color: var(--amarillo); }
+
+/* --- Perfil (lista de pedidos) --- */
+.perfil-page { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+.perfil-head { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--gris-claro); }
+.perfil-head h1 { margin-bottom: 4px; }
+.perfil-page h2 { margin-bottom: 18px; font-size: 1.2rem; }
+.pedidos-lista { display: grid; gap: 12px; }
+.pedido-card {
+    display: block;
+    background: var(--gris);
+    border: 1px solid var(--gris-claro);
+    border-radius: 10px;
+    padding: 16px 20px;
+    text-decoration: none;
+    color: var(--texto);
+    transition: border-color 0.15s;
+}
+.pedido-card:hover { border-color: var(--amarillo); }
+.pedido-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.pedido-card-head strong { font-size: 1.05rem; color: var(--amarillo); }
+.pedido-card-body { display: flex; justify-content: space-between; align-items: center; font-size: 0.92rem; }
+.pedido-card small { display: block; color: var(--texto-tenue); font-size: 0.78rem; margin-top: 8px; }
+.perfil-vacio { text-align: center; padding: 40px 20px; color: var(--texto-tenue); }
+.perfil-vacio p { margin-bottom: 18px; }
+.perfil-vacio .btn-pagar { display: inline-block; width: auto; padding: 12px 24px; }
+
+.estado {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.estado-pendiente_pago { background: rgba(254, 78, 2, 0.15); color: var(--amarillo); border: 1px solid var(--amarillo); }
+.estado-pagado         { background: rgba(34, 197, 94, 0.15);  color: var(--verde);    border: 1px solid var(--verde); }
+.estado-enviado        { background: rgba(96, 165, 250, 0.15); color: #60a5fa;         border: 1px solid #60a5fa; }
+.estado-entregado      { background: var(--gris-claro);        color: var(--texto-tenue); }
 
 /* --- Chatbot (asesor virtual) --- */
 .chatbot-toggle {
@@ -679,6 +764,17 @@ body {
 .metodo-unico { border-color: var(--amarillo); background: rgba(254,78,2,.06); cursor: default; }
 .metodo-ico { font-size: 1.8rem; line-height: 1; }
 .checkout-nota { text-align: center; color: var(--texto-tenue); font-size: 0.82rem; margin-top: 14px; }
+.checkout-cuenta {
+    background: rgba(254, 78, 2, 0.08);
+    border: 1px solid var(--gris-claro);
+    border-left: 3px solid var(--amarillo);
+    padding: 12px 14px;
+    border-radius: 6px;
+    margin-bottom: 18px;
+    color: var(--texto-tenue);
+    font-size: 0.88rem;
+}
+.checkout-cuenta a { color: var(--amarillo); font-weight: 700; }
 .metodo input { margin-top: 4px; }
 .metodo span { display: flex; flex-direction: column; }
 .metodo strong { color: var(--texto); }
