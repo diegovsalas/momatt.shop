@@ -71,7 +71,13 @@
                 </form>
                 {% else %}
                 <div class="producto-precio cotizar">Precio sujeto a cotización</div>
-                <a href="mailto:{{ sitio.email }}?subject=Cotización {{ p.nombre }}" class="btn-cotizar grande">Solicitar cotización</a>
+                <a href="https://wa.me/{{ sitio.whatsapp }}?text=Hola,%20me%20interesa%20cotizar%20el%20{{ p.nombre | urlencode }}%20({{ p.capacidad | urlencode }}).%20%C2%BFMe%20pueden%20enviar%20precio,%20disponibilidad%20y%20tiempo%20de%20entrega?"
+                   class="btn-cotizar grande" target="_blank" rel="noopener">
+                    💬 Cotizar por WhatsApp
+                </a>
+                <a href="mailto:{{ sitio.email }}?subject=Cotización {{ p.nombre }}" class="btn-cotizar-email">
+                    ✉️ O escríbenos a {{ sitio.email }}
+                </a>
                 {% endif %}
 
                 {% if p.ficha %}

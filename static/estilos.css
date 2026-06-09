@@ -479,6 +479,18 @@ body {
 }
 .btn-agregar:hover, .btn-pagar:hover, .btn-cotizar:hover { background: var(--amarillo-osc); }
 .btn-cotizar { background: transparent; color: var(--amarillo); border: 2px solid var(--amarillo); }
+.btn-cotizar-email {
+    display: block;
+    text-align: center;
+    margin-top: 8px;
+    padding: 10px;
+    color: var(--texto-tenue);
+    text-decoration: none;
+    font-size: 0.88rem;
+    border-radius: 8px;
+    border: 1px solid var(--gris-claro);
+}
+.btn-cotizar-email:hover { color: var(--amarillo); border-color: var(--amarillo); }
 
 /* --- Carrito --- */
 .carrito-page { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
