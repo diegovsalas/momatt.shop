@@ -30,7 +30,10 @@
                 </div>
                 {% endfor %}
                 <div class="resumen-linea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--gris-claro);">
-                    <span>Subtotal</span><strong>${{ "{:,.0f}".format(subtotal) }} MXN</strong>
+                    <span>Subtotal productos</span><strong>${{ "{:,.0f}".format(subtotal_prod) }} MXN</strong>
+                </div>
+                <div class="resumen-linea">
+                    <span>Envío "ocurre" ({{ unidades }} pz)</span><strong>${{ "{:,.0f}".format(envio) }} MXN</strong>
                 </div>
                 <div class="resumen-linea">
                     <span>IVA (16%)</span><strong>${{ "{:,.0f}".format(iva) }} MXN</strong>
@@ -54,6 +57,15 @@
                     <label>Teléfono (opcional)
                         <input type="tel" name="telefono">
                     </label>
+
+                    <h3>Paquetería (envío "ocurre")</h3>
+                    <p class="paqueteria-nota">Recoges tu pedido en la terminal de la paquetería en tu ciudad.</p>
+                    {% for paq in paqueterias %}
+                    <label class="metodo">
+                        <input type="radio" name="paqueteria" value="{{ paq }}" {% if loop.first %}checked{% endif %} required>
+                        <span><strong>Ocurre vía {{ paq }}</strong></span>
+                    </label>
+                    {% endfor %}
 
                     <h3>Método de pago</h3>
                     <input type="hidden" name="metodo" value="banregio">

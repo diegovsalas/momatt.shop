@@ -23,8 +23,14 @@
             <div class="dato"><span>Banco</span><strong>{{ banregio.banco }}</strong></div>
             <div class="dato"><span>CLABE</span><strong class="copiable">{{ banregio.clabe }}</strong></div>
             {% if banregio.cuenta %}<div class="dato"><span>Cuenta</span><strong class="copiable">{{ banregio.cuenta }}</strong></div>{% endif %}
-            <div class="dato total-pago"><span>Monto a pagar</span><strong>${{ "{:,.0f}".format(total) }} MXN</strong></div>
             <div class="dato"><span>Concepto / referencia</span><strong>{{ pedido }}</strong></div>
+        </div>
+
+        <div class="datos-pago">
+            <div class="dato"><span>Productos ({{ unidades }} pz)</span><strong>${{ "{:,.0f}".format(subtotal_prod) }}</strong></div>
+            <div class="dato"><span>Envío ocurre vía {{ paqueteria }}</span><strong>${{ "{:,.0f}".format(envio) }}</strong></div>
+            <div class="dato"><span>IVA (16%)</span><strong>${{ "{:,.0f}".format(iva) }}</strong></div>
+            <div class="dato total-pago"><span>Total a transferir</span><strong>${{ "{:,.0f}".format(total) }} MXN</strong></div>
         </div>
 
         <p class="nota">

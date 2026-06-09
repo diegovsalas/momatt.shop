@@ -38,7 +38,21 @@
                         <div class="mini">{{ item.producto.marca }} · {{ item.producto.capacidad }}</div>
                     </td>
                     <td>${{ "{:,.0f}".format(item.producto.precio) }}</td>
-                    <td>{{ item.cantidad }}</td>
+                    <td>
+                        <div class="qty-controls">
+                            <form action="/actualizar" method="post">
+                                <input type="hidden" name="producto_id" value="{{ item.producto.id }}">
+                                <input type="hidden" name="cantidad" value="{{ item.cantidad - 1 }}">
+                                <button type="submit" class="qty-btn" aria-label="Quitar uno">−</button>
+                            </form>
+                            <span class="qty-num">{{ item.cantidad }}</span>
+                            <form action="/actualizar" method="post">
+                                <input type="hidden" name="producto_id" value="{{ item.producto.id }}">
+                                <input type="hidden" name="cantidad" value="{{ item.cantidad + 1 }}">
+                                <button type="submit" class="qty-btn" aria-label="Agregar uno">+</button>
+                            </form>
+                        </div>
+                    </td>
                     <td>${{ "{:,.0f}".format(item.subtotal) }} MXN</td>
                     <td>
                         <form action="/eliminar" method="post">
@@ -51,14 +65,24 @@
             </tbody>
         </table>
 
+        {% if envio is none %}
+        <div class="aviso-cotizacion">
+            <h2>📦 Tu pedido necesita cotización de envío</h2>
+            <p>Tienes <strong>{{ unidades }} patines</strong> en el carrito. Para pedidos de <strong>11 o más unidades</strong> el costo de envío se cotiza directamente con el asesor para darte el mejor precio según destino y paquetería.</p>
+            <a href="https://wa.me/{{ sitio.whatsapp }}?text=Hola,%20tengo%20{{ unidades }}%20patines%20en%20mi%20carrito%20por%20${{ '{:,.0f}'.format(subtotal_prod) }}%20MXN.%20Necesito%20cotizaci%C3%B3n%20de%20env%C3%ADo,%20por%20favor."
+               class="btn-pagar btn-pagar-wa" target="_blank" rel="noopener">💬 Cotizar envío por WhatsApp</a>
+        </div>
+        {% else %}
         <div class="resumen">
             <div class="resumen-desglose">
-                <div class="resumen-linea"><span>Subtotal</span><strong>${{ "{:,.0f}".format(subtotal) }} MXN</strong></div>
+                <div class="resumen-linea"><span>Subtotal productos ({{ unidades }} pz)</span><strong>${{ "{:,.0f}".format(subtotal_prod) }} MXN</strong></div>
+                <div class="resumen-linea"><span>Envío "ocurre" (Castores o Autolínea Villarreal)</span><strong>${{ "{:,.0f}".format(envio) }} MXN</strong></div>
                 <div class="resumen-linea"><span>IVA (16%)</span><strong>${{ "{:,.0f}".format(iva) }} MXN</strong></div>
                 <div class="resumen-linea resumen-total-linea"><span>Total</span><strong>${{ "{:,.0f}".format(total) }} MXN</strong></div>
             </div>
             <a href="/checkout" class="btn-pagar">Continuar al pago</a>
         </div>
+        {% endif %}
         {% else %}
         <p class="vacio">Tu carrito está vacío. <a href="/">Ver productos</a></p>
         {% endif %}

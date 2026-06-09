@@ -55,19 +55,37 @@ def guardar_carrito(request, carrito):
 
 IVA = 0.16  # 16% IVA en México
 
+# Paqueterías disponibles para "ocurre" (recoge en terminal)
+PAQUETERIAS = ["Castores", "Autolínea Villarreal"]
+
+def costo_envio(unidades):
+    """Tabla de envío "ocurre" por # de patines. None = bajo cotización."""
+    if unidades <= 0:   return 0
+    if unidades == 1:   return 1300
+    if unidades <= 5:   return 1980
+    if unidades <= 10:  return 2450
+    return None          # 11+ requiere cotización manual
+
 def carrito_detallado(carrito):
-    """Devuelve los items, subtotal (sin IVA), IVA y total (con IVA)."""
-    items, subtotal = [], 0
+    """Devuelve items, subtotal productos, # unidades, envío, IVA y total.
+    Si hay 11+ unidades el envío es None y los demás totales también
+    (el cliente debe cotizar por WhatsApp en vez de comprar online)."""
+    items, subtotal_productos, unidades = [], 0, 0
     for pid, cant in carrito.items():
         p = catalogo.buscar_producto(pid)
         if not p or p["precio"] is None:
             continue
         sub = p["precio"] * cant
-        subtotal += sub
+        subtotal_productos += sub
+        unidades += cant
         items.append({"producto": p, "cantidad": cant, "subtotal": sub})
+    envio = costo_envio(unidades)
+    if envio is None:
+        return items, subtotal_productos, unidades, None, None, None
+    subtotal = subtotal_productos + envio
     iva = round(subtotal * IVA)
     total = subtotal + iva
-    return items, subtotal, iva, total
+    return items, subtotal_productos, unidades, envio, iva, total
 
 
 # --- RUTAS ---
@@ -112,18 +130,30 @@ def pagina_producto(request: Request, producto_id: str):
     })
 
 @app.post("/agregar")
-def agregar(request: Request, producto_id: str = Form(...)):
+def agregar(request: Request, producto_id: str = Form(...), cantidad: int = Form(1)):
+    cantidad = max(1, min(int(cantidad or 1), 99))
     carrito = obtener_carrito(request)
-    carrito[producto_id] = carrito.get(producto_id, 0) + 1
+    carrito[producto_id] = carrito.get(producto_id, 0) + cantidad
     guardar_carrito(request, carrito)
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url="/carrito", status_code=303)
+
+@app.post("/actualizar")
+def actualizar(request: Request, producto_id: str = Form(...), cantidad: int = Form(...)):
+    cantidad = max(0, min(int(cantidad), 99))
+    carrito = obtener_carrito(request)
+    if cantidad <= 0:
+        carrito.pop(producto_id, None)
+    else:
+        carrito[producto_id] = cantidad
+    guardar_carrito(request, carrito)
+    return RedirectResponse(url="/carrito", status_code=303)
 
 @app.get("/carrito", response_class=HTMLResponse)
 def ver_carrito(request: Request):
-    items, subtotal, iva, total = carrito_detallado(obtener_carrito(request))
+    items, subtotal_prod, unidades, envio, iva, total = carrito_detallado(obtener_carrito(request))
     return templates.TemplateResponse(request, "carrito.html", {
-        "items": items, "subtotal": subtotal, "iva": iva, "total": total,
-        "sitio": seo.SITIO})
+        "items": items, "subtotal_prod": subtotal_prod, "unidades": unidades,
+        "envio": envio, "iva": iva, "total": total, "sitio": seo.SITIO})
 
 @app.post("/eliminar")
 def eliminar(request: Request, producto_id: str = Form(...)):
@@ -136,12 +166,16 @@ def eliminar(request: Request, producto_id: str = Form(...)):
 @app.get("/checkout", response_class=HTMLResponse)
 def checkout_form(request: Request):
     """Muestra el formulario de datos del cliente + elección de método."""
-    items, subtotal, iva, total = carrito_detallado(obtener_carrito(request))
+    items, subtotal_prod, unidades, envio, iva, total = carrito_detallado(obtener_carrito(request))
     if not items:
         return RedirectResponse(url="/carrito", status_code=303)
+    if envio is None:
+        # 11+ patines → no se puede comprar online, redirigir a carrito que muestra CTA WhatsApp
+        return RedirectResponse(url="/carrito", status_code=303)
     return templates.TemplateResponse(request, "checkout.html", {
-        "items": items, "subtotal": subtotal, "iva": iva, "total": total,
-        "sitio": seo.SITIO})
+        "items": items, "subtotal_prod": subtotal_prod, "unidades": unidades,
+        "envio": envio, "iva": iva, "total": total,
+        "paqueterias": PAQUETERIAS, "sitio": seo.SITIO})
 
 
 @app.post("/pagar", response_class=HTMLResponse)
@@ -150,10 +184,11 @@ def procesar_pago(
     nombre: str = Form(...),
     correo: str = Form(...),
     telefono: str = Form(""),
-    metodo: str = Form(...),  # "spei" o "banregio"
+    metodo: str = Form(...),       # "spei" o "banregio"
+    paqueteria: str = Form("Castores"),
 ):
-    items, subtotal, iva, total = carrito_detallado(obtener_carrito(request))
-    if not items:
+    items, subtotal_prod, unidades, envio, iva, total = carrito_detallado(obtener_carrito(request))
+    if not items or envio is None:
         return RedirectResponse(url="/carrito", status_code=303)
 
     # Generamos un número de pedido simple basado en la sesión.
@@ -165,7 +200,12 @@ def procesar_pago(
         guardar_carrito(request, {})
         return templates.TemplateResponse(request, "pago_banregio.html", {
             "banregio": cfg.BANREGIO,
+            "subtotal_prod": subtotal_prod,
+            "envio": envio,
+            "iva": iva,
             "total": total,
+            "unidades": unidades,
+            "paqueteria": paqueteria,
             "pedido": pedido,
             "nombre": nombre,
             "sitio": seo.SITIO,
