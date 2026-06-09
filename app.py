@@ -339,15 +339,25 @@ def registro_submit(request: Request,
         return templates.TemplateResponse(request, "registro.html", {
             "sitio": seo.SITIO, "valores": valores,
             "error": "La contraseña debe tener al menos 8 caracteres."})
-    if db.buscar_usuario_por_email(email):
+    try:
+        if db.buscar_usuario_por_email(email):
+            return templates.TemplateResponse(request, "registro.html", {
+                "sitio": seo.SITIO, "valores": valores,
+                "error": "Ya existe una cuenta con ese correo. Inicia sesión."})
+        usuario = db.crear_usuario(email, auth.hash_password(password), nombre, telefono)
+        db.adoptar_pedidos_huerfanos(usuario["id"], email)
+        auth.login_session(request, usuario)
+        return RedirectResponse(url="/perfil", status_code=303)
+    except Exception as e:
+        # Loguea el detalle en stderr (visible en Render Logs) y
+        # muestra un mensaje genérico al cliente.
+        import traceback
+        print(f"❌ Error en /registro: {e!r}")
+        traceback.print_exc()
         return templates.TemplateResponse(request, "registro.html", {
             "sitio": seo.SITIO, "valores": valores,
-            "error": "Ya existe una cuenta con ese correo. Inicia sesión."})
-    usuario = db.crear_usuario(email, auth.hash_password(password), nombre, telefono)
-    # Asocia pedidos previos hechos como invitado con este correo
-    db.adoptar_pedidos_huerfanos(usuario["id"], email)
-    auth.login_session(request, usuario)
-    return RedirectResponse(url="/perfil", status_code=303)
+            "error": f"Hubo un error al crear tu cuenta. Detalle: {type(e).__name__}. "
+                     "Intenta de nuevo o escríbenos por WhatsApp."})
 
 
 @app.get("/login", response_class=HTMLResponse)

@@ -1,22 +1,23 @@
 # auth.py — Hashing de passwords y helpers de sesión
 # -------------------------------------------------------------------
-# - bcrypt para hashes (via passlib).
+# - bcrypt (librería nativa) para hashes — sin passlib porque su
+#   versión 1.7.4 tiene incompatibilidad con bcrypt 4.x.
 # - El usuario logueado se identifica por user_id guardado en la sesión
 #   (cookie firmada con SESSION_SECRET_KEY).
 # - current_user(request) devuelve el dict del usuario o None.
 # -------------------------------------------------------------------
-from passlib.hash import bcrypt
+import bcrypt
 
 import db
 
 
 def hash_password(plain: str) -> str:
-    return bcrypt.hash(plain)
+    return bcrypt.hashpw(plain.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     try:
-        return bcrypt.verify(plain, hashed)
+        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
     except Exception:
         return False
 

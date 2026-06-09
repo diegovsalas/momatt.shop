@@ -7,5 +7,5 @@ python-multipart
 
 # Postgres (con connection pool) + hashing de passwords + Resend
 psycopg[binary,pool]
-passlib[bcrypt]
+bcrypt
 resend
