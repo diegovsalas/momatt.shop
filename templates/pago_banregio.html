@@ -28,13 +28,16 @@
         </div>
 
         <p class="nota">
-            Después de transferir, envía tu comprobante a
-            <strong>{{ banregio.whatsapp }}</strong> (WhatsApp) o
+            Después de transferir, envía tu comprobante por WhatsApp o correo
             <strong>{{ banregio.correo }}</strong>, indicando tu número de pedido
             <strong>{{ pedido }}</strong>. Confirmamos y preparamos tu envío.
         </p>
 
-        <a href="/" class="btn-pagar">Volver a la tienda</a>
+        <a href="https://wa.me/{{ sitio.whatsapp }}?text=Hola,%20realic%C3%A9%20mi%20pago%20del%20pedido%20{{ pedido }}%20por%20${{ '{:,.0f}'.format(total) }}%20MXN.%20Adjunto%20mi%20comprobante."
+           class="btn-pagar btn-pagar-wa" target="_blank" rel="noopener">
+            💬 Mandar comprobante por WhatsApp
+        </a>
+        <a href="/" class="btn-volver">Volver a la tienda</a>
     </main>
 
     <footer class="footer"><p>© Outlet Momatt México</p></footer>

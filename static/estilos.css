@@ -611,6 +611,9 @@ body {
 .form-box h3 { margin: 20px 0 12px; font-size: 1rem; }
 .metodo { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 1px solid var(--gris-claro); border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
 .metodo:has(input:checked) { border-color: var(--amarillo); background: rgba(245,184,0,.06); }
+.metodo-unico { border-color: var(--amarillo); background: rgba(254,78,2,.06); cursor: default; }
+.metodo-ico { font-size: 1.8rem; line-height: 1; }
+.checkout-nota { text-align: center; color: var(--texto-tenue); font-size: 0.82rem; margin-top: 14px; }
 .metodo input { margin-top: 4px; }
 .metodo span { display: flex; flex-direction: column; }
 .metodo strong { color: var(--texto); }
@@ -629,6 +632,10 @@ body {
 .total-pago strong { color: var(--amarillo); font-size: 1.3rem; }
 .nota { color: var(--texto-tenue); font-size: 0.88rem; margin-bottom: 24px; line-height: 1.6; }
 .pago-page .btn-pagar { width: auto; display: inline-block; }
+.btn-pagar-wa { background: #25D366 !important; color: #fff !important; margin: 0 6px; }
+.btn-pagar-wa:hover { background: #1ebe5d !important; }
+.btn-volver { display: inline-block; margin-left: 6px; color: var(--texto-tenue); text-decoration: none; padding: 14px 24px; border: 1px solid var(--gris-claro); border-radius: 8px; font-weight: 700; }
+.btn-volver:hover { color: var(--texto); border-color: var(--amarillo); }
 
 @media (max-width: 760px) { .checkout-grid { grid-template-columns: 1fr; } }
 

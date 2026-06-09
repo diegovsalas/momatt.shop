@@ -56,22 +56,17 @@
                     </label>
 
                     <h3>Método de pago</h3>
-                    <label class="metodo">
-                        <input type="radio" name="metodo" value="spei" required>
+                    <input type="hidden" name="metodo" value="banregio">
+                    <div class="metodo metodo-unico">
+                        <span class="metodo-ico">🏦</span>
                         <span>
-                            <strong>Transferencia SPEI (automático)</strong>
-                            <small>Te damos una CLABE y referencia. Funciona con cualquier banco.</small>
+                            <strong>Transferencia bancaria directa a Banregio</strong>
+                            <small>Sin comisión. Al confirmar te mostramos los datos para depositar; tú nos mandas el comprobante por WhatsApp y enviamos tu pedido.</small>
                         </span>
-                    </label>
-                    <label class="metodo">
-                        <input type="radio" name="metodo" value="banregio">
-                        <span>
-                            <strong>Transferencia directa a Banregio</strong>
-                            <small>Sin comisión. Confirmas enviando tu comprobante.</small>
-                        </span>
-                    </label>
+                    </div>
 
                     <button type="submit" class="btn-pagar">Confirmar pedido</button>
+                    <p class="checkout-nota">🔒 Pago 100% seguro · Tu información no se guarda en nuestros servidores.</p>
                 </form>
             </div>
 

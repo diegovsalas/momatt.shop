@@ -168,6 +168,7 @@ def procesar_pago(
             "total": total,
             "pedido": pedido,
             "nombre": nombre,
+            "sitio": seo.SITIO,
         })
 
     elif metodo == "spei":
