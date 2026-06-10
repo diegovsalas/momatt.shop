@@ -81,7 +81,7 @@
 
         <div class="datos-pago">
             <h3 style="padding:8px 0;color:var(--amarillo);">Productos</h3>
-            {% for it in pedido.items %}
+            {% for it in items %}
             <div class="dato">
                 <span>{{ it.cantidad }} × {{ it.nombre }}</span>
                 <strong>${{ "{:,.0f}".format(it.subtotal) }}</strong>

@@ -426,17 +426,18 @@ def ver_pedido(request: Request, pedido_id: str):
             return templates.TemplateResponse(request, "error_pago.html", {
                 "mensaje": "Este pedido pertenece a otra cuenta. Inicia sesión para verlo."})
 
-        # psycopg3 normalmente decodifica JSONB a list/dict automático.
-        # Si por alguna razón vino como string, lo parseamos aquí para
-        # que el template pueda iterar.
+        # psycopg3 decodifica JSONB a list/dict. Si vino como string lo parseamos.
         import json as _json
         items = pedido.get("items")
         if isinstance(items, str):
-            pedido["items"] = _json.loads(items)
+            items = _json.loads(items)
 
+        # Importante: NO pasamos los items dentro del dict `pedido` porque
+        # `pedido.items` en Jinja resuelve como el método dict.items() —
+        # los pasamos como variable separada.
         return templates.TemplateResponse(request, "pedido_detalle.html", {
-            "sitio": seo.SITIO, "pedido": pedido, "banregio": cfg.BANREGIO,
-            "usuario": usuario})
+            "sitio": seo.SITIO, "pedido": pedido, "items": items or [],
+            "banregio": cfg.BANREGIO, "usuario": usuario})
     except Exception as e:
         import traceback
         print(f"❌ Error en /pedido/{pedido_id}: {e!r}")
