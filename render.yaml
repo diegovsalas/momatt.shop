@@ -68,3 +68,8 @@ services:
         sync: false
       - key: RESEND_FROM
         value: "Outlet Momatt <pedidos@momatt.shop>"
+
+      # Token secreto para el cron externo de recordatorios.
+      # Render genera uno aleatorio; copia su valor en cron-job.org.
+      - key: CRON_TOKEN
+        generateValue: true

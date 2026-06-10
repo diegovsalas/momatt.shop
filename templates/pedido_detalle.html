@@ -108,6 +108,17 @@
            class="btn-pagar btn-pagar-wa no-print" target="_blank" rel="noopener">
             💬 Mandar comprobante por WhatsApp
         </a>
+        <form action="/pedido/{{ pedido.id }}/marcar-pagado" method="post" class="no-print" style="margin-top:10px;">
+            <button type="submit" class="btn-volver" style="width:100%;cursor:pointer;font:inherit;">
+                ✓ Ya pagué y mandé comprobante (detener recordatorios)
+            </button>
+        </form>
+        {% elif pedido.estado == 'comprobante_enviado' %}
+        <div class="datos-pago no-print" style="background:rgba(34,197,94,0.06);border-color:var(--verde);">
+            <p style="padding:10px 0;color:var(--verde);font-weight:700;">
+                ✓ Marcaste este pedido como pagado. Te confirmaremos por WhatsApp en cuanto validemos el depósito.
+            </p>
+        </div>
         {% endif %}
         <a href="{% if usuario %}/perfil{% else %}/{% endif %}" class="btn-volver no-print">← Volver</a>
 

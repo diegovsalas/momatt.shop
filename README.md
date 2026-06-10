@@ -76,6 +76,29 @@ La tienda incluye SEO técnico enfocado en ventas:
 3. Cuando publiques, registra tu sitio en Google Search Console y sube el sitemap:
    https://momatt.shop/sitemap.xml
 
+## Recordatorios de pago (cron externo)
+
+El endpoint `/cron/recordatorios?token=CRON_TOKEN` busca pedidos
+`pendiente_pago` de más de 24 horas y manda un recordatorio por
+correo (Resend). Máximo 2 recordatorios por pedido, separados por 48
+horas. El cliente detiene los recordatorios marcando su pedido como
+pagado desde `/pedido/{id}`.
+
+**Setup** (una vez, gratis):
+
+1. En Render → tu servicio → Environment, copia el valor de `CRON_TOKEN`
+   (Render lo generó automático al primer deploy).
+2. Crea cuenta en https://cron-job.org (gratis, sin tarjeta).
+3. **Create cronjob** con estos valores:
+   - **Title:** Recordatorios pago Momatt
+   - **URL:** `https://momatt.shop/cron/recordatorios?token=PEGA_EL_TOKEN_AQUI`
+   - **Schedule:** `Every 6 hours` (o cuando prefieras)
+   - **Request method:** `POST` (también acepta GET)
+4. Guarda. cron-job.org te muestra logs de cada llamada.
+
+El endpoint responde JSON con conteo de enviados/fallidos para que
+veas los resultados en cron-job.org.
+
 ## Logo
 Tu logo está en `static/img/`:
 - `logo-momatt.png` — original completo (para compartir / Open Graph).

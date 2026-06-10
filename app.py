@@ -452,6 +452,66 @@ def ver_pedido(request: Request, pedido_id: str):
                        f"manualmente con el número {pedido_id}."})
 
 
+@app.post("/pedido/{pedido_id}/marcar-pagado")
+def marcar_pagado(request: Request, pedido_id: str):
+    """Autoservicio: el cliente declara que ya transfirió y mandó comprobante.
+    Detiene los recordatorios. Falta la confirmación manual del admin."""
+    err = _bd_o_error(request)
+    if err: return err
+    pedido = db.buscar_pedido(pedido_id)
+    if not pedido or pedido.get("estado") != "pendiente_pago":
+        return RedirectResponse(url=f"/pedido/{pedido_id}", status_code=303)
+
+    usuario = auth.current_user(request)
+    recientes = request.session.get("recent_pedidos", [])
+    autorizado = (usuario and pedido.get("user_id") == usuario["id"]) or (pedido_id in recientes)
+    if not autorizado:
+        return templates.TemplateResponse(request, "error_pago.html", {
+            "mensaje": "No puedes modificar este pedido."})
+
+    db.actualizar_estado_pedido(pedido_id, "comprobante_enviado")
+    return RedirectResponse(url=f"/pedido/{pedido_id}", status_code=303)
+
+
+# --- Cron: recordatorios de pago ---
+
+CRON_TOKEN = os.getenv("CRON_TOKEN", "")
+
+
+@app.get("/cron/recordatorios")
+@app.post("/cron/recordatorios")
+def cron_recordatorios(token: str = ""):
+    """Endpoint para cron-job.org. Se llama cada 6 hrs.
+    Autenticación: ?token=CRON_TOKEN.
+    Manda hasta 50 recordatorios por llamada."""
+    if not CRON_TOKEN or token != CRON_TOKEN:
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    if not db.disponible():
+        return {"error": "db_unavailable", "enviados": 0}
+
+    pendientes = db.pedidos_para_recordatorio(
+        max_recordatorios=2,
+        horas_desde_pedido=24,
+        horas_entre_recordatorios=48,
+    )
+    enviados, fallidos = 0, 0
+    for p in pendientes:
+        ok = correo.enviar_recordatorio_pago(
+            pedido=p,
+            banregio=cfg.BANREGIO,
+            dominio=seo.SITIO["dominio"],
+            whatsapp_visible=seo.SITIO.get("whatsapp_visible", ""),
+            whatsapp_digits=seo.SITIO.get("whatsapp", ""),
+        )
+        if ok:
+            db.marcar_recordatorio_enviado(p["id"])
+            enviados += 1
+        else:
+            fallidos += 1
+    return {"enviados": enviados, "fallidos": fallidos, "candidatos": len(pendientes)}
+
+
 # --- SEO técnico: sitemap y robots ---
 from fastapi.responses import Response, PlainTextResponse
 

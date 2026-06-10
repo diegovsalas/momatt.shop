@@ -88,6 +88,8 @@ def _migrate():
         conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS rfc            TEXT;")
         conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS razon_social   TEXT;")
         conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS cp_fiscal      TEXT;")
+        conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS recordatorio_pago_at   TIMESTAMPTZ;")
+        conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS recordatorios_enviados INTEGER DEFAULT 0;")
         conn.commit()
 
 
@@ -158,6 +160,58 @@ def listar_pedidos_de_usuario(user_id: int):
                 (user_id,),
             )
             return cur.fetchall()
+
+
+def actualizar_estado_pedido(pedido_id: str, nuevo_estado: str) -> bool:
+    """Cambia el estado de un pedido. Devuelve True si se actualizó."""
+    with _pool.connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE pedidos SET estado = %s WHERE id = %s;",
+                (nuevo_estado, pedido_id),
+            )
+            ok = cur.rowcount > 0
+            conn.commit()
+            return ok
+
+
+def pedidos_para_recordatorio(max_recordatorios: int = 2,
+                              horas_desde_pedido: int = 24,
+                              horas_entre_recordatorios: int = 48):
+    """Devuelve pedidos que necesitan recordatorio de pago:
+       - estado pendiente_pago
+       - creados hace al menos `horas_desde_pedido` horas
+       - con menos de `max_recordatorios` recordatorios enviados
+       - último recordatorio hace más de `horas_entre_recordatorios` horas
+         (o nunca enviado)."""
+    with _pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT * FROM pedidos
+                WHERE estado = 'pendiente_pago'
+                  AND created_at < NOW() - INTERVAL '%s hours'
+                  AND COALESCE(recordatorios_enviados, 0) < %s
+                  AND (recordatorio_pago_at IS NULL
+                       OR recordatorio_pago_at < NOW() - INTERVAL '%s hours')
+                ORDER BY created_at ASC
+                LIMIT 50;
+                """,
+                (horas_desde_pedido, max_recordatorios, horas_entre_recordatorios),
+            )
+            return cur.fetchall()
+
+
+def marcar_recordatorio_enviado(pedido_id: str):
+    with _pool.connection() as conn:
+        conn.execute(
+            "UPDATE pedidos "
+            "SET recordatorio_pago_at = NOW(), "
+            "    recordatorios_enviados = COALESCE(recordatorios_enviados, 0) + 1 "
+            "WHERE id = %s;",
+            (pedido_id,),
+        )
+        conn.commit()
 
 
 def adoptar_pedidos_huerfanos(user_id: int, email: str):
