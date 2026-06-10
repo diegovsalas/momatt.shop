@@ -651,6 +651,85 @@ body {
 .aviso-cotizacion .btn-pagar-wa { display: inline-block; width: auto; padding: 14px 28px; }
 
 .paqueteria-nota { color: var(--texto-tenue); font-size: 0.82rem; margin-bottom: 8px; }
+.fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 500px) { .fila-2 { grid-template-columns: 1fr; } }
+.metodo small { display: block; margin-top: 4px; color: var(--texto-tenue); font-size: 0.78rem; }
+.metodo small a { color: var(--amarillo); text-decoration: none; }
+.metodo small a:hover { text-decoration: underline; }
+
+.datos-fiscales {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: rgba(254, 78, 2, 0.04);
+    border: 1px dashed var(--gris-claro);
+    border-radius: 8px;
+}
+.datos-fiscales summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--texto);
+    font-size: 0.92rem;
+    list-style: none;
+}
+.datos-fiscales summary::before { content: "▸ "; color: var(--amarillo); }
+.datos-fiscales[open] summary::before { content: "▾ "; }
+.datos-fiscales[open] { background: rgba(254, 78, 2, 0.08); }
+
+/* --- Página de detalle de pedido + impresión / PDF --- */
+.pedido-page { max-width: 760px; }
+.pedido-titulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.btn-imprimir {
+    background: var(--gris);
+    color: var(--texto);
+    border: 1.5px solid var(--amarillo);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.92rem;
+}
+.btn-imprimir:hover { background: var(--amarillo); color: var(--negro); }
+
+.print-only { display: none; }
+.pedido-print-header { display: flex; gap: 18px; align-items: center; padding-bottom: 16px; border-bottom: 2px solid #ddd; margin-bottom: 18px; }
+.pedido-print-header img { height: 60px; }
+.pedido-print-foot { margin-top: 30px; padding-top: 14px; border-top: 1px solid #ddd; font-size: 0.78rem; color: #666; text-align: center; }
+
+@media print {
+    /* Reset a colores imprimibles */
+    body { background: #fff !important; color: #222 !important; font-size: 11pt; }
+    .no-print { display: none !important; }
+    .print-only { display: block !important; }
+    .pedido-print-header { display: flex !important; }
+    main, .pago-page, .pedido-page { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    .datos-pago {
+        background: #fafafa !important;
+        border: 1px solid #ccc !important;
+        padding: 12px 16px !important;
+        margin-bottom: 14px !important;
+        page-break-inside: avoid;
+    }
+    .dato {
+        padding: 8px 0 !important;
+        border-bottom: 1px solid #eee !important;
+        color: #222 !important;
+    }
+    .dato span { color: #666 !important; }
+    .dato strong { color: #222 !important; }
+    .dato.total-pago strong { color: #000 !important; font-size: 1.2rem; }
+    h1 { color: #fe4e02 !important; margin-bottom: 4px; }
+    h3 { color: #fe4e02 !important; }
+    a { color: #222 !important; text-decoration: none; }
+    .estado { border: 1px solid #999 !important; color: #444 !important; background: #fff !important; }
+    .copiable { font-family: monospace; }
+}
 .resumen {
     display: flex;
     justify-content: space-between;

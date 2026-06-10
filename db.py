@@ -80,6 +80,13 @@ def _migrate():
         """)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_pedidos_email   ON pedidos(email);")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_pedidos_user_id ON pedidos(user_id);")
+        # Migración aditiva: ciudad/estado de entrega y datos fiscales
+        # opcionales. ADD COLUMN IF NOT EXISTS es seguro de re-ejecutar.
+        conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS ciudad_entrega TEXT;")
+        conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS estado_entrega TEXT;")
+        conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS rfc            TEXT;")
+        conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS razon_social   TEXT;")
+        conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS cp_fiscal      TEXT;")
         conn.commit()
 
 
@@ -115,15 +122,21 @@ def buscar_usuario_por_id(user_id: int):
 
 def crear_pedido(pedido_id: str, user_id, email: str, nombre: str, telefono: str,
                  items: list, subtotal_prod: int, envio: int, iva: int, total: int,
-                 unidades: int, paqueteria: str, metodo: str):
+                 unidades: int, paqueteria: str, metodo: str,
+                 ciudad_entrega: str = "", estado_entrega: str = "",
+                 rfc: str = "", razon_social: str = "", cp_fiscal: str = ""):
     """Persiste un pedido. user_id puede ser None (guest checkout)."""
     with _pool.connection() as conn:
         conn.execute(
             "INSERT INTO pedidos (id, user_id, email, nombre, telefono, items, "
-            "subtotal_prod, envio, iva, total, unidades, paqueteria, metodo) "
-            "VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s, %s);",
+            "subtotal_prod, envio, iva, total, unidades, paqueteria, metodo, "
+            "ciudad_entrega, estado_entrega, rfc, razon_social, cp_fiscal) "
+            "VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s, %s, "
+            "%s, %s, %s, %s, %s);",
             (pedido_id, user_id, email.lower().strip(), nombre, telefono or None,
-             json.dumps(items), subtotal_prod, envio, iva, total, unidades, paqueteria, metodo),
+             json.dumps(items), subtotal_prod, envio, iva, total, unidades, paqueteria, metodo,
+             ciudad_entrega or None, estado_entrega or None,
+             rfc or None, razon_social or None, cp_fiscal or None),
         )
         conn.commit()
 
