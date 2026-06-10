@@ -32,3 +32,4 @@ dist/
 
 # Local FastAPI / uvicorn
 *.pid
+_tmp*
