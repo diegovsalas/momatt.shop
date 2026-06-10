@@ -37,6 +37,7 @@
             <h3 style="padding:8px 0;color:var(--amarillo);">📦 Recoger en sucursal</h3>
             <div class="dato"><span>Paquetería</span><strong>{{ paqueteria }}</strong></div>
             <div class="dato"><span>Ciudad</span><strong>{{ ciudad_entrega }}, {{ estado_entrega }}</strong></div>
+            {% if sucursal %}<div class="dato"><span>Sucursal</span><strong>{{ sucursal }}</strong></div>{% endif %}
             {% if paqueteria == 'Castores' %}
             <p style="padding:14px 0 4px;color:var(--texto-tenue);font-size:0.88rem;">
                 Consulta la sucursal Castores más cercana en

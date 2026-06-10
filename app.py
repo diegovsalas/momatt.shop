@@ -200,6 +200,7 @@ def procesar_pago(
     paqueteria: str = Form("Castores"),
     ciudad_entrega: str = Form(...),
     estado_entrega: str = Form(...),
+    sucursal: str = Form(""),
     rfc: str = Form(""),
     razon_social: str = Form(""),
     cp_fiscal: str = Form(""),
@@ -230,6 +231,7 @@ def procesar_pago(
                 subtotal_prod=subtotal_prod, envio=envio, iva=iva, total=total,
                 unidades=unidades, paqueteria=paqueteria, metodo="banregio",
                 ciudad_entrega=ciudad_entrega, estado_entrega=estado_entrega,
+                sucursal=sucursal,
                 rfc=rfc, razon_social=razon_social, cp_fiscal=cp_fiscal,
             )
         # Correo de confirmación (best-effort: no rompe el flujo si falla)
@@ -261,6 +263,7 @@ def procesar_pago(
             "nombre": nombre,
             "ciudad_entrega": ciudad_entrega,
             "estado_entrega": estado_entrega,
+            "sucursal": sucursal,
             "sitio": seo.SITIO,
         })
 

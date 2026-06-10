@@ -11,12 +11,12 @@
 # --- Datos base del negocio (cámbialos por los tuyos reales) ---
 SITIO = {
     "nombre": "Outlet Momatt México",
-    "dominio": "https://www.outletmomatt.com",   # <-- TU DOMINIO real cuando lo tengas
+    "dominio": "https://momatt.shop",            # Dominio real en producción
     "descripcion_corta": "Venta de patines hidráulicos industriales para tarima. Traspaletas de 2.3, 2.5 y 3 toneladas. Envío a todo México.",
     "telefono": "+52 81 3568 7469",              # <-- TU TELÉFONO (visible)
     "whatsapp": "528135687469",                  # <-- SOLO DÍGITOS, sin + ni espacios (para wa.me)
     "whatsapp_visible": "+52 81 3568 7469",      # Para mostrar al cliente
-    "email": "ventas@outletmomatt.com",          # <-- TU CORREO
+    "email": "ventas@momatt.shop",               # <-- TU CORREO
     "ciudad": "San Nicolás de los Garza",
     "estado": "Nuevo León",
     "pais": "MX",

@@ -67,4 +67,4 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: RESEND_FROM
-        value: "Outlet Momatt <pedidos@outletmomatt.com>"
+        value: "Outlet Momatt <pedidos@momatt.shop>"

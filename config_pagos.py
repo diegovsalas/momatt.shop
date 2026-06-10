@@ -17,7 +17,7 @@ BANREGIO = {
     "clabe":    os.getenv("BANREGIO_CLABE",    "058000000000000000"),  # 18 dígitos
     "cuenta":   os.getenv("BANREGIO_CUENTA",   "0000000000"),
     "whatsapp": os.getenv("BANREGIO_WHATSAPP", "+52 81 3568 7469"),
-    "correo":   os.getenv("BANREGIO_CORREO",   "ventas@outletmomatt.com"),
+    "correo":   os.getenv("BANREGIO_CORREO",   "ventas@momatt.shop"),
 }
 
 

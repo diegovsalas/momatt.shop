@@ -71,10 +71,10 @@ La tienda incluye SEO técnico enfocado en ventas:
   y señales de confianza (envío, pago seguro) que suben la conversión.
 
 ### Para activar el SEO en producción
-1. Edita `seo.py` -> `SITIO["dominio"]` con tu dominio real (ej. https://www.outletmomatt.com).
+1. Edita `seo.py` -> `SITIO["dominio"]` con tu dominio real (ej. https://momatt.shop).
 2. Edita teléfono, correo, ciudad en el mismo diccionario `SITIO`.
 3. Cuando publiques, registra tu sitio en Google Search Console y sube el sitemap:
-   https://www.outletmomatt.com/sitemap.xml
+   https://momatt.shop/sitemap.xml
 
 ## Logo
 Tu logo está en `static/img/`:

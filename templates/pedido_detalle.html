@@ -57,6 +57,9 @@
             {% if pedido.ciudad_entrega %}
             <div class="dato"><span>Ciudad</span><strong>{{ pedido.ciudad_entrega }}{% if pedido.estado_entrega %}, {{ pedido.estado_entrega }}{% endif %}</strong></div>
             {% endif %}
+            {% if pedido.sucursal %}
+            <div class="dato"><span>Sucursal</span><strong>{{ pedido.sucursal }}</strong></div>
+            {% endif %}
             {% if pedido.paqueteria == 'Castores' %}
             <p class="no-print" style="padding:10px 0 4px;color:var(--texto-tenue);font-size:0.88rem;">
                 Sucursal Castores más cercana →
