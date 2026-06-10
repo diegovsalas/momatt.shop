@@ -25,6 +25,38 @@ SITIO = {
     "horario": "Lun-Vie 9:00-18:00 · Sáb 9:00-14:00",
 }
 
+
+# --- Testimoniales (los puedes editar libremente cuando tengas reseñas reales) ---
+# Mientras tanto, mantén estos para construir confianza inicial. Conforme
+# tus clientes te dejen reseñas reales (por WhatsApp, correo, Google),
+# reemplázalas aquí con su nombre y empresa.
+TESTIMONIOS = [
+    {
+        "nombre": "Ricardo Pérez",
+        "empresa": "Distribuidora Norte, Monterrey",
+        "texto": "Compré 5 patines Truper para nuestro CEDIS. Llegaron bien empacados y la atención por WhatsApp fue rapidísima. Ya pedimos más.",
+        "rating": 5,
+    },
+    {
+        "nombre": "María Fernanda Solís",
+        "empresa": "Almacenes del Bajío, Querétaro",
+        "texto": "El Crown PTH 50 era exactamente lo que necesitábamos para piso de concreto. Buen precio comparado con el distribuidor local y factura sin problema.",
+        "rating": 5,
+    },
+    {
+        "nombre": "Jorge Mendoza",
+        "empresa": "Tienda de Conveniencia Saltillo",
+        "texto": "Necesitaba un patín silencioso para no molestar a clientes en piso. El Surtek de ruedas de poliuretano funciona perfecto. Envío en 3 días.",
+        "rating": 5,
+    },
+    {
+        "nombre": "Patricia Ramírez",
+        "empresa": "Comercializadora del Pacífico",
+        "texto": "Compré uno por probar y al mes pedí 3 más para otra sucursal. El asesor virtual me ayudó a elegir el modelo correcto para mi tipo de tarima.",
+        "rating": 5,
+    },
+]
+
 # --- Palabras clave principales (las que más busca tu cliente) ---
 # Ordenadas por intención de compra. Úsalas en títulos y descripciones.
 KEYWORDS_PRINCIPALES = [

@@ -90,6 +90,7 @@ def _migrate():
         conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS cp_fiscal      TEXT;")
         conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS recordatorio_pago_at   TIMESTAMPTZ;")
         conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS recordatorios_enviados INTEGER DEFAULT 0;")
+        conn.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS guia                   TEXT;")
         conn.commit()
 
 
@@ -162,17 +163,64 @@ def listar_pedidos_de_usuario(user_id: int):
             return cur.fetchall()
 
 
-def actualizar_estado_pedido(pedido_id: str, nuevo_estado: str) -> bool:
-    """Cambia el estado de un pedido. Devuelve True si se actualizó."""
+def actualizar_estado_pedido(pedido_id: str, nuevo_estado: str, guia: str = None) -> bool:
+    """Cambia el estado de un pedido. Si se pasa guia, también la actualiza."""
     with _pool.connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(
-                "UPDATE pedidos SET estado = %s WHERE id = %s;",
-                (nuevo_estado, pedido_id),
-            )
+            if guia is not None:
+                cur.execute(
+                    "UPDATE pedidos SET estado = %s, guia = %s WHERE id = %s;",
+                    (nuevo_estado, guia or None, pedido_id),
+                )
+            else:
+                cur.execute(
+                    "UPDATE pedidos SET estado = %s WHERE id = %s;",
+                    (nuevo_estado, pedido_id),
+                )
             ok = cur.rowcount > 0
             conn.commit()
             return ok
+
+
+# ------------------- ADMIN -------------------
+
+def listar_pedidos(estado: str = None, busqueda: str = None, limit: int = 200):
+    """Lista pedidos para el panel admin, con filtros opcionales."""
+    with _pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            sql = "SELECT * FROM pedidos WHERE 1=1"
+            params = []
+            if estado and estado != "todos":
+                sql += " AND estado = %s"
+                params.append(estado)
+            if busqueda:
+                sql += " AND (id ILIKE %s OR email ILIKE %s OR nombre ILIKE %s)"
+                q = f"%{busqueda}%"
+                params += [q, q, q]
+            sql += " ORDER BY created_at DESC LIMIT %s;"
+            params.append(limit)
+            cur.execute(sql, tuple(params))
+            return cur.fetchall()
+
+
+def stats_dashboard():
+    """Métricas para el dashboard admin."""
+    with _pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute("""
+                SELECT
+                    COUNT(*) FILTER (WHERE estado = 'pendiente_pago') AS pendientes_pago,
+                    COUNT(*) FILTER (WHERE estado = 'comprobante_enviado') AS por_validar,
+                    COUNT(*) FILTER (WHERE estado = 'pagado') AS pagados,
+                    COUNT(*) FILTER (WHERE estado = 'enviado') AS enviados,
+                    COUNT(*) FILTER (WHERE estado = 'entregado') AS entregados,
+                    COUNT(*) AS total_pedidos,
+                    COALESCE(SUM(total) FILTER (WHERE estado IN ('pagado','enviado','entregado')
+                                                AND created_at > NOW() - INTERVAL '30 days'), 0) AS ventas_30d,
+                    COALESCE(SUM(total) FILTER (WHERE estado IN ('pagado','enviado','entregado')), 0) AS ventas_total
+                FROM pedidos;
+            """)
+            return cur.fetchone()
 
 
 def pedidos_para_recordatorio(max_recordatorios: int = 2,

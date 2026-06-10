@@ -38,6 +38,7 @@ app = FastAPI(title="Tienda de Patines Hidraulicos")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+templates.env.globals["es_admin"] = auth.es_admin
 
 
 @app.on_event("startup")
@@ -107,6 +108,7 @@ def home(request: Request):
         "meta": seo.meta_home(),
         "schema_org": seo.schema_organizacion(),
         "sitio": seo.SITIO,
+        "testimonios": seo.TESTIMONIOS,
         "usuario": auth.current_user(request),
     })
 
@@ -471,6 +473,80 @@ def marcar_pagado(request: Request, pedido_id: str):
 
     db.actualizar_estado_pedido(pedido_id, "comprobante_enviado")
     return RedirectResponse(url=f"/pedido/{pedido_id}", status_code=303)
+
+
+# --- Admin: dashboard y gestión de pedidos ---
+
+# Estados válidos para un pedido (define la "state machine")
+ESTADOS_PEDIDO = [
+    "pendiente_pago", "comprobante_enviado", "pagado", "enviado", "entregado", "cancelado"
+]
+
+def _require_admin(request):
+    """Devuelve (usuario, None) si es admin, o (None, Response) si no."""
+    err = _bd_o_error(request)
+    if err: return None, err
+    usuario = auth.current_user(request)
+    if not usuario:
+        return None, RedirectResponse(url="/login", status_code=303)
+    if not auth.es_admin(usuario):
+        return None, templates.TemplateResponse(request, "error_pago.html", {
+            "mensaje": "Esta sección es solo para administradores."})
+    return usuario, None
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def admin_dashboard(request: Request):
+    usuario, err = _require_admin(request)
+    if err: return err
+    stats = db.stats_dashboard()
+    recientes = db.listar_pedidos(limit=10)
+    return templates.TemplateResponse(request, "admin_dashboard.html", {
+        "sitio": seo.SITIO, "usuario": usuario,
+        "stats": stats, "recientes": recientes})
+
+
+@app.get("/admin/pedidos", response_class=HTMLResponse)
+def admin_pedidos(request: Request, estado: str = "todos", q: str = ""):
+    usuario, err = _require_admin(request)
+    if err: return err
+    pedidos = db.listar_pedidos(estado=estado, busqueda=q or None)
+    return templates.TemplateResponse(request, "admin_pedidos.html", {
+        "sitio": seo.SITIO, "usuario": usuario,
+        "pedidos": pedidos, "estado_filtro": estado, "busqueda": q,
+        "estados": ESTADOS_PEDIDO})
+
+
+@app.get("/admin/pedido/{pedido_id}", response_class=HTMLResponse)
+def admin_pedido_detalle(request: Request, pedido_id: str):
+    usuario, err = _require_admin(request)
+    if err: return err
+    pedido = db.buscar_pedido(pedido_id)
+    if not pedido:
+        return RedirectResponse(url="/admin/pedidos", status_code=303)
+    # JSONB items: defensiva
+    import json as _json
+    items = pedido.get("items")
+    if isinstance(items, str):
+        items = _json.loads(items)
+    return templates.TemplateResponse(request, "admin_pedido_detalle.html", {
+        "sitio": seo.SITIO, "usuario": usuario, "pedido": pedido,
+        "items": items or [], "banregio": cfg.BANREGIO,
+        "estados": ESTADOS_PEDIDO})
+
+
+@app.post("/admin/pedido/{pedido_id}/estado")
+def admin_cambiar_estado(request: Request, pedido_id: str,
+                         nuevo_estado: str = Form(...),
+                         guia: str = Form("")):
+    usuario, err = _require_admin(request)
+    if err: return err
+    if nuevo_estado not in ESTADOS_PEDIDO:
+        return templates.TemplateResponse(request, "error_pago.html", {
+            "mensaje": f"Estado inválido: {nuevo_estado}"})
+    db.actualizar_estado_pedido(pedido_id, nuevo_estado,
+                                 guia=guia.strip() or None)
+    return RedirectResponse(url=f"/admin/pedido/{pedido_id}", status_code=303)
 
 
 # --- Cron: recordatorios de pago ---

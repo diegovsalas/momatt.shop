@@ -6,9 +6,20 @@
 #   (cookie firmada con SESSION_SECRET_KEY).
 # - current_user(request) devuelve el dict del usuario o None.
 # -------------------------------------------------------------------
+import os
+
 import bcrypt
 
 import db
+
+
+# Lista de correos con permiso de administrar pedidos. Separados por coma
+# en la env var ADMIN_EMAILS. Ej.: "diego@momatt.shop,ventas@momatt.shop"
+ADMIN_EMAILS = {
+    e.strip().lower()
+    for e in os.getenv("ADMIN_EMAILS", "").split(",")
+    if e.strip()
+}
 
 
 def hash_password(plain: str) -> str:
@@ -37,3 +48,10 @@ def current_user(request):
     if not uid or not db.disponible():
         return None
     return db.buscar_usuario_por_id(uid)
+
+
+def es_admin(usuario) -> bool:
+    """¿Este usuario está en la allowlist de administradores?"""
+    if not usuario:
+        return False
+    return (usuario.get("email") or "").lower() in ADMIN_EMAILS

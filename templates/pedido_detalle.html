@@ -51,6 +51,26 @@
             {% if pedido.telefono %}<div class="dato"><span>Teléfono</span><strong>{{ pedido.telefono }}</strong></div>{% endif %}
         </div>
 
+        {% if pedido.guia %}
+        <div class="datos-pago" style="border-color:#60a5fa;">
+            <h3 style="padding:8px 0;color:#60a5fa;">🚚 Tu pedido va en camino</h3>
+            <div class="dato"><span>Guía de envío</span><strong style="font-family:monospace;font-size:1.05rem;">{{ pedido.guia }}</strong></div>
+            <div class="dato"><span>Paquetería</span><strong>{{ pedido.paqueteria }}</strong></div>
+            {% if pedido.paqueteria == 'Castores' %}
+            <a href="https://www.castores.com.mx/rastreo" target="_blank" rel="noopener" class="btn-pagar no-print" style="background:#60a5fa;color:#fff;margin-top:10px;">
+                📍 Rastrear con Castores
+            </a>
+            {% elif pedido.paqueteria == 'Autolínea Villarreal' %}
+            <a href="https://www.autolineasvillarreal.com.mx" target="_blank" rel="noopener" class="btn-pagar no-print" style="background:#60a5fa;color:#fff;margin-top:10px;">
+                📍 Rastrear con Autolínea Villarreal
+            </a>
+            {% endif %}
+            <p class="no-print" style="margin-top:10px;color:var(--texto-tenue);font-size:0.85rem;">
+                Copia tu número de guía y pégalo en la página de rastreo de la paquetería para ver el avance.
+            </p>
+        </div>
+        {% endif %}
+
         <div class="datos-pago">
             <h3 style="padding:8px 0;color:var(--amarillo);">📦 Recoger en sucursal</h3>
             <div class="dato"><span>Paquetería</span><strong>{{ pedido.paqueteria }}</strong></div>

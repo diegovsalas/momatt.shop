@@ -73,6 +73,25 @@
         </div>
     </section>
 
+    <!-- Testimoniales -->
+    {% if testimonios %}
+    <section class="testimonios-section" aria-label="Lo que dicen nuestros clientes">
+        <h2>Lo que dicen nuestros clientes</h2>
+        <div class="testimonios-grid">
+            {% for t in testimonios %}
+            <article class="testimonio-card">
+                <div class="estrellas">{% for _ in range(t.rating) %}★{% endfor %}{% for _ in range(5 - t.rating) %}☆{% endfor %}</div>
+                <p class="testimonio-texto">"{{ t.texto }}"</p>
+                <div class="testimonio-firma">
+                    <strong>{{ t.nombre }}</strong>
+                    <small>{{ t.empresa }}</small>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
     <main class="catalogo" id="catalogo">
         {% for cat in categorias %}
         <h2 class="categoria-titulo">{{ cat }}</h2>

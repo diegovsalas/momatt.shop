@@ -73,3 +73,8 @@ services:
       # Render genera uno aleatorio; copia su valor en cron-job.org.
       - key: CRON_TOKEN
         generateValue: true
+
+      # Correos con acceso al panel /admin, separados por coma.
+      # Ej.: "diego@momatt.shop,ventas@momatt.shop"
+      - key: ADMIN_EMAILS
+        sync: false

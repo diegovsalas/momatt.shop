@@ -14,6 +14,9 @@
     <header class="topbar">
         <a href="/" class="logo"><img src="/static/img/logo-texto.png" alt="Outlet Momatt México"></a>
         <nav class="topbar-nav">
+            {% if es_admin(usuario) %}
+            <a href="/admin" class="topbar-link" style="color:var(--amarillo);">⚙️ Admin</a>
+            {% endif %}
             <a href="/perfil" class="topbar-link active">👤 {{ usuario.nombre.split()[0] }}</a>
             <form action="/logout" method="post" style="display:inline">
                 <button type="submit" class="topbar-link" style="border:none;background:none;cursor:pointer;font:inherit;color:inherit;">Salir</button>
