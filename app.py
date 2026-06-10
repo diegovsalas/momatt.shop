@@ -414,19 +414,38 @@ def perfil(request: Request):
 def ver_pedido(request: Request, pedido_id: str):
     err = _bd_o_error(request)
     if err: return err
-    pedido = db.buscar_pedido(pedido_id)
-    if not pedido:
-        return RedirectResponse(url="/", status_code=303)
-    # Autorización: dueño logueado O guest que lo hizo en esta sesión
-    usuario = auth.current_user(request)
-    recientes = request.session.get("recent_pedidos", [])
-    autorizado = (usuario and pedido.get("user_id") == usuario["id"]) or (pedido_id in recientes)
-    if not autorizado:
+    try:
+        pedido = db.buscar_pedido(pedido_id)
+        if not pedido:
+            return RedirectResponse(url="/", status_code=303)
+        # Autorización: dueño logueado O guest que lo hizo en esta sesión
+        usuario = auth.current_user(request)
+        recientes = request.session.get("recent_pedidos", [])
+        autorizado = (usuario and pedido.get("user_id") == usuario["id"]) or (pedido_id in recientes)
+        if not autorizado:
+            return templates.TemplateResponse(request, "error_pago.html", {
+                "mensaje": "Este pedido pertenece a otra cuenta. Inicia sesión para verlo."})
+
+        # psycopg3 normalmente decodifica JSONB a list/dict automático.
+        # Si por alguna razón vino como string, lo parseamos aquí para
+        # que el template pueda iterar.
+        import json as _json
+        items = pedido.get("items")
+        if isinstance(items, str):
+            pedido["items"] = _json.loads(items)
+
+        return templates.TemplateResponse(request, "pedido_detalle.html", {
+            "sitio": seo.SITIO, "pedido": pedido, "banregio": cfg.BANREGIO,
+            "usuario": usuario})
+    except Exception as e:
+        import traceback
+        print(f"❌ Error en /pedido/{pedido_id}: {e!r}")
+        traceback.print_exc()
         return templates.TemplateResponse(request, "error_pago.html", {
-            "mensaje": "Este pedido pertenece a otra cuenta. Inicia sesión para verlo."})
-    return templates.TemplateResponse(request, "pedido_detalle.html", {
-        "sitio": seo.SITIO, "pedido": pedido, "banregio": cfg.BANREGIO,
-        "usuario": usuario})
+            "mensaje": f"No se pudo cargar el pedido. Detalle técnico: "
+                       f"{type(e).__name__}: {e}. Avísanos por WhatsApp para "
+                       f"resolverlo y mientras tanto te confirmamos tu pedido "
+                       f"manualmente con el número {pedido_id}."})
 
 
 # --- SEO técnico: sitemap y robots ---
