@@ -1,9 +1,17 @@
-/* estilos.css — tema industrial */
+/* estilos.css — tema claro */
 
 :root{
-  --negro:#1a1a1a; --gris:#222222; --gris-claro:#333333;
+  /* Fondos: del más claro al ligeramente gris (mantengo nombres "negro/gris"
+     por compatibilidad con todo el CSS, pero ahora son tonos claros) */
+  --negro:#ffffff;          /* fondo principal */
+  --gris:#fafafa;           /* tarjetas / paneles secundarios */
+  --gris-claro:#e5e7eb;     /* bordes */
+  /* Marca */
   --amarillo:#fe4e02; --amarillo-osc:#d63e00;
-  --texto:#ededed; --texto-tenue:#9a9a9a; --verde:#22c55e;
+  /* Textos */
+  --texto:#1a1a1a;          /* texto principal: casi negro */
+  --texto-tenue:#6b7280;    /* texto secundario gris medio */
+  --verde:#16a34a;          /* verde más oscuro para contraste sobre blanco */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,18 +30,18 @@ body {
     align-items: center;
     gap: 24px;
     padding: 14px 32px;
-    background: var(--negro);
+    background: #ffffff;
     border-bottom: 3px solid var(--amarillo);
     position: sticky;
     top: 0;
     z-index: 10;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 .logo {
     display: inline-flex;
     align-items: center;
     text-decoration: none;
-    background: #fff;
+    background: #1a1a1a;
     padding: 4px 12px;
     border-radius: 6px;
     transition: transform 0.15s;
@@ -75,7 +83,7 @@ body {
 }
 .badge {
     background: var(--amarillo);
-    color: var(--negro);
+    color: #ffffff;
     border-radius: 999px;
     padding: 2px 9px;
     font-size: 0.78rem;
@@ -89,7 +97,7 @@ body {
 .hero {
     text-align: center;
     padding: 56px 24px;
-    background: linear-gradient(135deg, var(--gris) 0%, var(--negro) 100%);
+    background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
 }
 .hero h1 { font-size: 2.2rem; margin-bottom: 12px; }
 .hero p { color: var(--texto-tenue); font-size: 1.1rem; }
@@ -97,7 +105,7 @@ body {
 /* Variante con imagen de banner (hero gráfico) */
 .hero-img {
     padding: 24px 24px 32px;
-    background: linear-gradient(135deg, #0e0e0e 0%, var(--negro) 100%);
+    background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
 }
 .hero-img-link {
     display: block;
@@ -592,7 +600,7 @@ body {
 .marca { color: var(--amarillo); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 .card-body h3 { font-size: 1.05rem; margin: 6px 0 8px; }
 .desc { color: var(--texto-tenue); font-size: 0.88rem; flex: 1; margin-bottom: 14px; }
-.precio { font-size: 1.4rem; font-weight: 800; color: #fff; }
+.precio { font-size: 1.4rem; font-weight: 800; color: var(--texto); }
 .precio.cotizar { font-size: 1rem; color: var(--amarillo); }
 .precio-iva { font-size: 0.7rem; color: var(--texto-tenue); font-weight: 600; letter-spacing: 0.5px; }
 .precio-bloque {
@@ -986,7 +994,7 @@ body {
 .producto-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .producto-info h1 { font-size: 1.8rem; margin: 8px 0 16px; line-height: 1.2; }
 .producto-desc { color: var(--texto-tenue); font-size: 1.05rem; margin-bottom: 20px; }
-.producto-precio { font-size: 2.4rem; font-weight: 800; color: #fff; }
+.producto-precio { font-size: 2.4rem; font-weight: 800; color: var(--texto); }
 .producto-precio span { font-size: 1.1rem; color: var(--texto-tenue); }
 .producto-precio.cotizar { font-size: 1.4rem; color: var(--amarillo); }
 .compra-form { margin: 18px 0; }
