@@ -162,44 +162,48 @@ body {
 .trust-item strong { display: block; font-size: 0.95rem; color: var(--texto); }
 .trust-item small { color: var(--texto-tenue); font-size: 0.8rem; }
 
-/* --- Testimoniales --- */
+/* --- Testimoniales (compactos, al final de la página) --- */
 .testimonios-section {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 40px 24px 24px;
+    padding: 20px 24px 32px;
 }
 .testimonios-section h2 {
     text-align: center;
-    font-size: 1.5rem;
-    margin-bottom: 28px;
-    color: var(--texto);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--texto-tenue);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
 }
 .testimonios-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
 }
 .testimonio-card {
     background: var(--gris);
     border: 1px solid var(--gris-claro);
-    border-radius: 12px;
-    padding: 22px 20px;
+    border-radius: 8px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
     transition: border-color 0.15s;
 }
 .testimonio-card:hover { border-color: var(--amarillo); }
-.estrellas { color: var(--amarillo); font-size: 1.05rem; letter-spacing: 2px; }
+.estrellas { color: var(--amarillo); font-size: 0.78rem; letter-spacing: 1px; }
 .testimonio-texto {
     color: var(--texto);
-    font-size: 0.95rem;
-    line-height: 1.55;
+    font-size: 0.78rem;
+    line-height: 1.45;
     flex: 1;
     font-style: italic;
+    margin: 2px 0;
 }
-.testimonio-firma strong { display: block; color: var(--texto); font-size: 0.92rem; }
-.testimonio-firma small  { display: block; color: var(--texto-tenue); font-size: 0.82rem; margin-top: 2px; }
+.testimonio-firma strong { display: block; color: var(--texto); font-size: 0.78rem; }
+.testimonio-firma small  { display: block; color: var(--texto-tenue); font-size: 0.7rem; margin-top: 1px; }
 
 /* --- Nota de precios --- */
 .precios-nota {
