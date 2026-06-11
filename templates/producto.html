@@ -69,9 +69,6 @@
                 {% endif %}
                 <div class="producto-precio">${{ "{:,.0f}".format(p.precio) }} <span>MXN + IVA</span></div>
                 {% if p.precio_anterior %}<p class="ahorro">Ahorras ${{ "{:,.0f}".format(p.precio_anterior - p.precio) }} MXN</p>{% endif %}
-                {% if p.stock and p.stock > 0 %}
-                <p class="stock ok">✓ {{ p.stock }} disponibles · listo para envío</p>
-                {% endif %}
                 <form action="/agregar" method="post" class="compra-form">
                     <input type="hidden" name="producto_id" value="{{ p.id }}">
                     <label class="cantidad-label">

@@ -94,7 +94,6 @@
                         </div>
                         {% endif %}
                         <div class="precio">${{ "{:,.0f}".format(p.precio) }} <small class="precio-iva">MXN + IVA</small></div>
-                        {% if p.stock and p.stock > 0 %}<span class="stock ok">{{ p.stock }} disponibles</span>{% endif %}
                         <a href="/producto/{{ p.id }}" class="btn-ver">Ver detalles</a>
                         <form action="/agregar" method="post">
                             <input type="hidden" name="producto_id" value="{{ p.id }}">
