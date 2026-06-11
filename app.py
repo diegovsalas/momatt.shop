@@ -517,6 +517,16 @@ def admin_pedidos(request: Request, estado: str = "todos", q: str = ""):
         "estados": ESTADOS_PEDIDO})
 
 
+@app.get("/admin/usuarios", response_class=HTMLResponse)
+def admin_usuarios(request: Request, q: str = ""):
+    usuario, err = _require_admin(request)
+    if err: return err
+    usuarios = db.listar_usuarios(busqueda=q or None)
+    return templates.TemplateResponse(request, "admin_usuarios.html", {
+        "sitio": seo.SITIO, "usuario": usuario,
+        "usuarios": usuarios, "busqueda": q})
+
+
 @app.get("/admin/pedido/{pedido_id}", response_class=HTMLResponse)
 def admin_pedido_detalle(request: Request, pedido_id: str):
     usuario, err = _require_admin(request)

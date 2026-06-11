@@ -203,6 +203,33 @@ def listar_pedidos(estado: str = None, busqueda: str = None, limit: int = 200):
             return cur.fetchall()
 
 
+def listar_usuarios(busqueda: str = None, limit: int = 500):
+    """Lista usuarios registrados con conteo de pedidos y total gastado.
+    Pedidos cobrados = estado in ('pagado','enviado','entregado')."""
+    with _pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            sql = """
+                SELECT u.id, u.email, u.nombre, u.telefono, u.created_at,
+                       COUNT(p.id) AS num_pedidos,
+                       COALESCE(SUM(p.total) FILTER (
+                           WHERE p.estado IN ('pagado','enviado','entregado')
+                       ), 0) AS total_gastado,
+                       MAX(p.created_at) AS ultimo_pedido
+                FROM usuarios u
+                LEFT JOIN pedidos p ON p.user_id = u.id
+            """
+            params = []
+            if busqueda:
+                sql += " WHERE u.email ILIKE %s OR u.nombre ILIKE %s OR u.telefono ILIKE %s"
+                q = f"%{busqueda}%"
+                params += [q, q, q]
+            sql += " GROUP BY u.id, u.email, u.nombre, u.telefono, u.created_at"
+            sql += " ORDER BY u.created_at DESC LIMIT %s;"
+            params.append(limit)
+            cur.execute(sql, tuple(params))
+            return cur.fetchall()
+
+
 def stats_dashboard():
     """Métricas para el dashboard admin."""
     with _pool.connection() as conn:
@@ -220,7 +247,15 @@ def stats_dashboard():
                     COALESCE(SUM(total) FILTER (WHERE estado IN ('pagado','enviado','entregado')), 0) AS ventas_total
                 FROM pedidos;
             """)
-            return cur.fetchone()
+            stats = cur.fetchone()
+            # Conteo de usuarios registrados
+            cur.execute("SELECT COUNT(*) AS total_usuarios, "
+                        "COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '30 days') AS usuarios_30d "
+                        "FROM usuarios;")
+            usuarios = cur.fetchone()
+            stats["total_usuarios"] = usuarios["total_usuarios"]
+            stats["usuarios_30d"] = usuarios["usuarios_30d"]
+            return stats
 
 
 def pedidos_para_recordatorio(max_recordatorios: int = 2,
