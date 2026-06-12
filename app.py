@@ -266,6 +266,7 @@ def procesar_pago(
             "ciudad_entrega": ciudad_entrega,
             "estado_entrega": estado_entrega,
             "sucursal": sucursal,
+            "items_snapshot": items_snapshot,  # para GA4 purchase
             "sitio": seo.SITIO,
         })
 
@@ -361,7 +362,7 @@ def registro_submit(request: Request,
         usuario = db.crear_usuario(email, auth.hash_password(password), nombre, telefono)
         db.adoptar_pedidos_huerfanos(usuario["id"], email)
         auth.login_session(request, usuario)
-        return RedirectResponse(url="/perfil", status_code=303)
+        return RedirectResponse(url="/perfil?welcome=1", status_code=303)
     except Exception as e:
         # Loguea el detalle en stderr (visible en Render Logs) y
         # muestra un mensaje genérico al cliente.

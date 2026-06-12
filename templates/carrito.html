@@ -103,5 +103,28 @@
         <span>💬</span>
         <strong>¿Dudas? Asesor</strong>
     </a>
+
+    {% if items %}
+    <!-- GA4: view_cart -->
+    <script>
+      if (typeof gtag === 'function') {
+        gtag('event', 'view_cart', {
+          currency: 'MXN',
+          value: {{ subtotal_prod }},
+          items: [
+            {% for item in items %}
+            {
+              item_id:    {{ item.producto.id | tojson }},
+              item_name:  {{ item.producto.nombre | tojson }},
+              item_brand: {{ item.producto.marca | tojson }},
+              price:      {{ item.producto.precio }},
+              quantity:   {{ item.cantidad }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
+        });
+      }
+    </script>
+    {% endif %}
 </body>
 </html>

@@ -63,5 +63,14 @@
        class="whatsapp-float" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
         <span>💬</span><strong>¿Dudas? Asesor</strong>
     </a>
+
+    {% if request.query_params.get('welcome') %}
+    <!-- GA4: sign_up (solo cuando viene del registro recién hecho) -->
+    <script>
+      if (typeof gtag === 'function') {
+        gtag('event', 'sign_up', { method: 'email' });
+      }
+    </script>
+    {% endif %}
 </body>
 </html>

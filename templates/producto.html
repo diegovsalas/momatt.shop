@@ -195,5 +195,23 @@
         <span>💬</span>
         <strong>Pregunta por este modelo</strong>
     </a>
+
+    <!-- GA4: view_item -->
+    <script>
+      if (typeof gtag === 'function') {
+        gtag('event', 'view_item', {
+          currency: 'MXN',
+          value: {{ p.precio if p.precio else 0 }},
+          items: [{
+            item_id:       {{ p.id | tojson }},
+            item_name:     {{ p.nombre | tojson }},
+            item_brand:    {{ p.marca | tojson }},
+            item_category: {{ p.categoria | tojson }},
+            price:         {{ p.precio if p.precio else 0 }},
+            quantity:      1
+          }]
+        });
+      }
+    </script>
 </body>
 </html>

@@ -62,5 +62,28 @@
     </main>
 
     <footer class="footer"><p>© Outlet Momatt México</p></footer>
+
+    <!-- GA4: purchase (conversión principal) -->
+    <script>
+      if (typeof gtag === 'function') {
+        gtag('event', 'purchase', {
+          transaction_id: {{ pedido | tojson }},
+          value:    {{ total }},
+          tax:      {{ iva }},
+          shipping: {{ envio }},
+          currency: 'MXN',
+          items: [
+            {% for it in items_snapshot %}
+            {
+              item_id:   {{ it.id | tojson }},
+              item_name: {{ it.nombre | tojson }},
+              price:     {{ it.precio }},
+              quantity:  {{ it.cantidad }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
+        });
+      }
+    </script>
 </body>
 </html>
