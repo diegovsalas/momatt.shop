@@ -9,3 +9,7 @@ python-multipart
 psycopg[binary,pool]
 bcrypt
 resend
+
+# Gateways de pago (scaffolded — solo se activan si pones las API keys)
+stripe
+mercadopago

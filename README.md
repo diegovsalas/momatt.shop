@@ -76,6 +76,31 @@ La tienda incluye SEO técnico enfocado en ventas:
 3. Cuando publiques, registra tu sitio en Google Search Console y sube el sitemap:
    https://momatt.shop/sitemap.xml
 
+## Gateways de pago (scaffolded)
+
+Tres integraciones en módulos separados; cada una tiene una bandera
+`IMPLEMENTACION_TERMINADA` arriba del archivo. Hasta que esa bandera
+sea `True` Y las API keys correspondientes estén configuradas en
+Render, la opción NO se muestra al cliente en el checkout.
+
+| Módulo | Estado | Cómo activar |
+|---|---|---|
+| `pagos_openpay.py` | Implementado, esperando aprobación SPEI de Openpay | Pon `OPENPAY_MERCHANT_ID` y `OPENPAY_PRIVATE_KEY` en Render. Endpoint webhook: `/webhook/openpay`. |
+| `pagos_stripe.py` | Scaffold — falta terminar 3 funciones | 1) Termina los TODO en el módulo. 2) Cambia `IMPLEMENTACION_TERMINADA=True`. 3) Pon `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`. 4) Webhook: `/webhook/stripe`. |
+| `pagos_mercadopago.py` | Scaffold — falta terminar 3 funciones | 1) Termina los TODO. 2) `IMPLEMENTACION_TERMINADA=True`. 3) Pon `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET`. 4) Webhook: `/webhook/mercadopago`. 5) Opcional: `MP_MSI_HABILITADO=True` para meses sin intereses. |
+
+Banregio (transferencia manual) no usa gateway y siempre está
+disponible. El cliente puede elegir su método de pago en el
+checkout entre los que estén activos.
+
+Cuando un cliente paga vía gateway: la app crea el pedido en
+estado `pendiente_pago`, redirige al cliente al checkout
+hospedado del gateway, el gateway llama al webhook
+correspondiente, y el handler pone el pedido en `pagado`. Hasta
+que llegue el webhook el pedido queda en `pendiente_pago`, así
+que **es crítico configurar bien los webhooks** en los dashboards
+de Stripe y MP cuando los actives.
+
 ## Recordatorios de pago (cron externo)
 
 El endpoint `/cron/recordatorios?token=CRON_TOKEN` busca pedidos

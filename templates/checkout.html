@@ -121,14 +121,49 @@
                     </details>
 
                     <h3>Método de pago</h3>
-                    <input type="hidden" name="metodo" value="banregio">
-                    <div class="metodo metodo-unico">
+
+                    {# Banregio: siempre disponible (no requiere gateway). #}
+                    <label class="metodo">
+                        <input type="radio" name="metodo" value="banregio" checked required>
                         <span class="metodo-ico">🏦</span>
                         <span>
                             <strong>Transferencia bancaria directa a Banregio</strong>
-                            <small>Sin comisión. Al confirmar te mostramos los datos para depositar; tú nos mandas el comprobante por WhatsApp y enviamos tu pedido.</small>
+                            <small>Sin comisión. Al confirmar te mostramos los datos; mandas comprobante por WhatsApp.</small>
                         </span>
-                    </div>
+                    </label>
+
+                    {% if pagos_stripe_on %}
+                    <label class="metodo">
+                        <input type="radio" name="metodo" value="stripe" required>
+                        <span class="metodo-ico">💳</span>
+                        <span>
+                            <strong>Tarjeta u OXXO (Stripe)</strong>
+                            <small>Pagas en la página segura de Stripe. Confirmación instantánea con tarjeta.</small>
+                        </span>
+                    </label>
+                    {% endif %}
+
+                    {% if pagos_mercadopago_on %}
+                    <label class="metodo">
+                        <input type="radio" name="metodo" value="mercadopago" required>
+                        <span class="metodo-ico">💳</span>
+                        <span>
+                            <strong>Tarjeta, OXXO o MSI (Mercado Pago)</strong>
+                            <small>Hasta 12 meses sin intereses con tarjetas participantes.</small>
+                        </span>
+                    </label>
+                    {% endif %}
+
+                    {% if pagos_openpay_on %}
+                    <label class="metodo">
+                        <input type="radio" name="metodo" value="openpay" required>
+                        <span class="metodo-ico">🏦</span>
+                        <span>
+                            <strong>Transferencia SPEI automática (Openpay)</strong>
+                            <small>Te damos una CLABE única para tu pedido. Funciona con cualquier banco.</small>
+                        </span>
+                    </label>
+                    {% endif %}
 
                     <button type="submit" class="btn-pagar">Confirmar pedido</button>
                     <p class="checkout-nota">🔒 Pago 100% seguro · Tu información no se guarda en nuestros servidores.</p>

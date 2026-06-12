@@ -10,8 +10,6 @@
 # -------------------------------------------------------------------
 import os
 import secrets
-import requests
-from requests.auth import HTTPBasicAuth
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -23,6 +21,9 @@ import catalogo
 import config_pagos as cfg
 import correo
 import db
+import pagos_mercadopago
+import pagos_openpay
+import pagos_stripe
 import seo
 
 # Llave para firmar las cookies de sesión. En producción DEBE venir de
@@ -46,13 +47,7 @@ def _startup():
     db.init()
 
 # --- Configurar Openpay (API REST) desde config_pagos.py ---
-# El SDK oficial de Python está abandonado (no instala en Python 3.12),
-# así que llamamos la API REST directo con requests. Es más limpio.
-OPENPAY_BASE = (
-    "https://api.openpay.mx/v1" if cfg.OPENPAY_PRODUCCION
-    else "https://sandbox-api.openpay.mx/v1"
-)
-OPENPAY_AUTH = HTTPBasicAuth(cfg.OPENPAY_PRIVATE_KEY, "")  # llave privada como usuario, sin password
+# Las constantes de Openpay (URL base + auth) viven ahora en pagos_openpay.
 
 
 # --- Helpers del carrito (viven en la sesion como {producto_id: cantidad}) ---
@@ -189,7 +184,11 @@ def checkout_form(request: Request):
         "items": items, "subtotal_prod": subtotal_prod, "unidades": unidades,
         "envio": envio, "iva": iva, "total": total,
         "paqueterias": PAQUETERIAS, "sitio": seo.SITIO,
-        "total_items": unidades, "usuario": auth.current_user(request)})
+        "total_items": unidades, "usuario": auth.current_user(request),
+        "pagos_stripe_on":       pagos_stripe.disponible(),
+        "pagos_mercadopago_on":  pagos_mercadopago.disponible(),
+        "pagos_openpay_on":      pagos_openpay.disponible(),
+    })
 
 
 @app.post("/pagar", response_class=HTMLResponse)
@@ -270,51 +269,66 @@ def procesar_pago(
             "sitio": seo.SITIO,
         })
 
-    elif metodo == "spei":
-        # --- SPEI vía Openpay: creamos un cargo bank_account por API REST. ---
-        if not cfg.OPENPAY_PRIVATE_KEY or not cfg.OPENPAY_MERCHANT_ID:
+    elif metodo == "openpay":
+        # --- SPEI vía Openpay (módulo pagos_openpay) ---
+        if not pagos_openpay.disponible():
             return templates.TemplateResponse(request, "error_pago.html", {
-                "mensaje": "Faltan las llaves de Openpay. Configúralas en config_pagos.py o como variables de entorno (OPENPAY_MERCHANT_ID y OPENPAY_PRIVATE_KEY)."})
+                "mensaje": "Openpay no está habilitado. Usa Banregio o cotiza por WhatsApp."})
         try:
-            # POST a /{merchant_id}/charges con method=bank_account
-            url = f"{OPENPAY_BASE}/{cfg.OPENPAY_MERCHANT_ID}/charges"
-            payload = {
-                "method": "bank_account",
-                "amount": float(total),       # Openpay usa pesos con decimales
-                "description": f"Pedido {pedido} - Outlet Momatt México",
-                "order_id": pedido,
-                "customer": {
-                    "name": nombre,
-                    "email": email_cliente,
-                    "phone_number": telefono or "0000000000",
-                },
-            }
-            resp = requests.post(url, json=payload, auth=OPENPAY_AUTH,
-                                 headers={"Content-Type": "application/json"},
-                                 timeout=20)
-            if resp.status_code not in (200, 201):
-                return templates.TemplateResponse(request, "error_pago.html", {
-                    "mensaje": f"Openpay respondió {resp.status_code}: {resp.text}"})
-
-            data = resp.json()
-            # Los datos de la transferencia vienen en payment_method.
-            pm = data.get("payment_method", {})
-            datos_spei = {
-                "clabe": pm.get("clabe", ""),
-                "banco": pm.get("bank", "") or pm.get("name", ""),
-                "referencia": pm.get("reference", ""),
-                "agreement": pm.get("agreement", ""),
-            }
+            datos_spei = pagos_openpay.crear_cargo_spei(
+                pedido_id=pedido, total=total,
+                descripcion=f"Pedido {pedido} - Outlet Momatt México",
+                nombre=nombre, email=email_cliente, telefono=telefono,
+            )
             guardar_carrito(request, {})
             return templates.TemplateResponse(request, "pago_spei.html", {
-                "datos": datos_spei,
-                "total": total,
-                "pedido": pedido,
-                "nombre": nombre,
+                "datos": datos_spei, "total": total,
+                "pedido": pedido, "nombre": nombre,
             })
         except Exception as e:
             return templates.TemplateResponse(request, "error_pago.html", {
                 "mensaje": f"Error al conectar con Openpay: {e}"})
+
+    elif metodo in ("stripe", "mercadopago"):
+        # --- Gateways de checkout hospedado (Stripe / Mercado Pago) ---
+        modulo = pagos_stripe if metodo == "stripe" else pagos_mercadopago
+        if not modulo.disponible():
+            return templates.TemplateResponse(request, "error_pago.html", {
+                "mensaje": f"La integración con {metodo.title()} todavía no está activa. "
+                           "Usa Banregio o avísanos por WhatsApp para procesar tu pago."})
+        try:
+            url_redirect = modulo.crear_pago(
+                pedido_id=pedido,
+                total_centavos=int(total * 100),
+                descripcion=f"Pedido {pedido} - Outlet Momatt",
+                email_cliente=email_cliente,
+                items=items_snapshot,
+                success_url=f"{seo.SITIO['dominio']}/pedido/{pedido}",
+                cancel_url=f"{seo.SITIO['dominio']}/checkout",
+            )
+            # Persistir el pedido en estado pendiente (el webhook lo pasará a pagado)
+            usuario = auth.current_user(request)
+            if db.disponible():
+                db.crear_pedido(
+                    pedido_id=pedido,
+                    user_id=(usuario["id"] if usuario else None),
+                    email=email_cliente, nombre=nombre, telefono=telefono,
+                    items=items_snapshot,
+                    subtotal_prod=subtotal_prod, envio=envio, iva=iva, total=total,
+                    unidades=unidades, paqueteria=paqueteria, metodo=metodo,
+                    ciudad_entrega=ciudad_entrega, estado_entrega=estado_entrega,
+                    sucursal=sucursal,
+                    rfc=rfc, razon_social=razon_social, cp_fiscal=cp_fiscal,
+                )
+            guardar_carrito(request, {})
+            return RedirectResponse(url=url_redirect, status_code=303)
+        except NotImplementedError:
+            return templates.TemplateResponse(request, "error_pago.html", {
+                "mensaje": f"La integración con {metodo.title()} aún no está terminada. "
+                           "Usa Banregio o cotiza por WhatsApp."})
+        except Exception as e:
+            return templates.TemplateResponse(request, "error_pago.html", {
+                "mensaje": f"Error con {metodo.title()}: {e}"})
 
     else:
         return RedirectResponse(url="/checkout", status_code=303)
@@ -558,6 +572,72 @@ def admin_cambiar_estado(request: Request, pedido_id: str,
     db.actualizar_estado_pedido(pedido_id, nuevo_estado,
                                  guia=guia.strip() or None)
     return RedirectResponse(url=f"/admin/pedido/{pedido_id}", status_code=303)
+
+
+# --- Webhooks de gateways de pago ---
+
+from fastapi.responses import JSONResponse
+
+
+async def _aplicar_cambio_estado(pedido_id: str, nuevo_estado: str):
+    """Aplica una transición de estado disparada por un webhook."""
+    if not (pedido_id and nuevo_estado):
+        return
+    if not db.disponible():
+        return
+    db.actualizar_estado_pedido(pedido_id, nuevo_estado)
+    # TODO: cuando esté listo, mandar correo de pago confirmado al cliente
+
+
+@app.post("/webhook/openpay")
+async def webhook_openpay(request: Request):
+    """Openpay no firma con secreto — se asegura por whitelist de IP en
+    la cuenta. Procesa eventos charge.succeeded / charge.failed."""
+    try:
+        body = await request.json()
+        pedido_id, nuevo_estado = pagos_openpay.procesar_webhook(body)
+        await _aplicar_cambio_estado(pedido_id, nuevo_estado)
+        return {"ok": True}
+    except Exception as e:
+        print(f"⚠  webhook_openpay error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+
+@app.post("/webhook/stripe")
+async def webhook_stripe(request: Request):
+    """Stripe firma con STRIPE_WEBHOOK_SECRET. Sin firma → rechazamos."""
+    body = await request.body()
+    sig = request.headers.get("stripe-signature", "")
+    try:
+        evento = pagos_stripe.verificar_webhook(sig, body)
+        pedido_id, nuevo_estado = pagos_stripe.procesar_evento(evento)
+        await _aplicar_cambio_estado(pedido_id, nuevo_estado)
+        return {"ok": True}
+    except NotImplementedError:
+        # Llega un webhook real pero el módulo aún no está terminado
+        return JSONResponse({"error": "stripe handler pending"}, status_code=501)
+    except Exception as e:
+        print(f"⚠  webhook_stripe error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+
+@app.post("/webhook/mercadopago")
+async def webhook_mercadopago(request: Request):
+    """MP firma con x-signature (HMAC). request-id y data.id van en headers/query."""
+    body = await request.body()
+    sig = request.headers.get("x-signature", "")
+    req_id = request.headers.get("x-request-id", "")
+    data_id = request.query_params.get("data.id", "")
+    try:
+        evento = pagos_mercadopago.verificar_webhook(sig, body, req_id, data_id)
+        pedido_id, nuevo_estado = pagos_mercadopago.procesar_evento(evento)
+        await _aplicar_cambio_estado(pedido_id, nuevo_estado)
+        return {"ok": True}
+    except NotImplementedError:
+        return JSONResponse({"error": "mercadopago handler pending"}, status_code=501)
+    except Exception as e:
+        print(f"⚠  webhook_mercadopago error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=400)
 
 
 # --- Cron: recordatorios de pago ---

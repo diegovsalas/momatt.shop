@@ -62,6 +62,24 @@ services:
       - key: OPENPAY_PRODUCCION
         value: "False"           # cámbialo a True cuando estés listo para cobros reales
 
+      # --- Stripe (scaffolded; activar cuando termines pagos_stripe.py) ---
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+      # --- Mercado Pago (scaffolded; activar cuando termines pagos_mercadopago.py) ---
+      - key: MP_ACCESS_TOKEN
+        sync: false
+      - key: MP_PUBLIC_KEY
+        sync: false
+      - key: MP_WEBHOOK_SECRET
+        sync: false
+      - key: MP_MSI_HABILITADO
+        value: "False"           # cámbialo a True para ofrecer Meses Sin Intereses
+
       # Resend (correos transaccionales). Crea cuenta en resend.com,
       # genera la API key y ponla aquí desde el dashboard de Render.
       - key: RESEND_API_KEY
